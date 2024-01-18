@@ -33,12 +33,13 @@ public class HashedIndex implements Index {
             PostingsList postingsList = index.get(token);
             if (postingsList.get(postingsList.size() - 1).docID == docID) {
                 postingsList.get(postingsList.size() - 1).score++;
+                postingsList.get(postingsList.size() - 1).offsets.add(offset);
             } else {
-                postingsList.add(docID, offset);
+                postingsList.add(docID, offset, 1);
             }
         } else {
             PostingsList postingsList = new PostingsList();
-            postingsList.add(docID, offset);
+            postingsList.add(docID, offset, 1);
             index.put(token, postingsList);
         }
     }

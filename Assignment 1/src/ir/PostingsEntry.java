@@ -33,13 +33,23 @@ public class PostingsEntry implements Comparable<PostingsEntry>, Serializable {
     //
     // YOUR CODE HERE
     //
-    public PostingsEntry(int docID, double score) {
+    public ArrayList<Integer> offsets = new ArrayList<Integer>();
+
+    public PostingsEntry(int docID, int offset, double score) {
         this.docID = docID;
         this.score = score;
+        offsets.add(offset);
     }
 
-    public PostingsEntry(int docID) {
-        this.docID = docID;
+    @Override
+    public String toString() {
+        StringBuilder s = new StringBuilder();
+        s.append(docID).append(": ");
+        for (Integer offset : offsets) {
+            s.append(offset).append(" ");
+        }
+        s.append("(").append(score).append(")");
+        return s.toString();
     }
 }
 

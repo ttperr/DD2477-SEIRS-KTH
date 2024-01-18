@@ -28,14 +28,14 @@ public class PostingsList {
     // 
     //  YOUR CODE HERE
     //
-    public void add(int docID, double score) {
-        list.add(new PostingsEntry(docID, score));
+    public void add(int docID, int offset, double score) {
+        list.add(new PostingsEntry(docID, offset, score));
     }
 
     public String toString() {
         StringBuilder s = new StringBuilder();
-        for (PostingsEntry postingsEntry : list) {
-            s.append(postingsEntry.docID).append(" ");
+        for (PostingsEntry entry : list) {
+            s.append(entry.toString()).append("\n");
         }
         return s.toString();
     }
