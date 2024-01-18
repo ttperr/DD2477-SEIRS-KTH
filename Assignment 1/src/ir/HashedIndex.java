@@ -52,8 +52,6 @@ public class HashedIndex implements Index {
         //
         // REPLACE THE STATEMENT BELOW WITH YOUR CODE
         //
-        System.out.println("Get postings for: " + token);
-        System.out.println("Postings: " + index.get(token).toString());
         return index.get(token);
     }
 

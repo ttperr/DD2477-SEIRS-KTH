@@ -7,6 +7,8 @@
 
 package ir;
 
+import java.util.ArrayList;
+
 /**
  *  Searches an index for results of a query.
  */
@@ -32,6 +34,43 @@ public class Searcher {
         //
         //  REPLACE THE STATEMENT BELOW WITH YOUR CODE
         //
-        return index.getPostings(query.queryterm.getFirst().term);
+        if (queryType == QueryType.INTERSECTION_QUERY) {
+            return intersectionQuery(query);
+        }/* else if (queryType == QueryType.PHRASE_QUERY) {
+            return phraseQuery(query);
+        } else if (queryType == QueryType.RANKED_QUERY) {
+            return rankedQuery(query, rankingType, normType);
+        } */else {
+            return null;
+        }
+    }
+    private PostingsList intersectionQuery(Query query) {
+        ArrayList<PostingsList> postingsLists = new ArrayList<PostingsList>();
+        for (int i = 0; i < query.queryterm.size(); i++) {
+            postingsLists.add(index.getPostings(query.queryterm.get(i).term));
+        }
+        PostingsList result = postingsLists.getFirst();
+        for (int i = 1; i < postingsLists.size(); i++) {
+            result = intersect(result, postingsLists.get(i));
+        }
+        return result;
+    }
+
+    private PostingsList intersect(PostingsList p1, PostingsList p2) {
+        PostingsList result = new PostingsList();
+        int i = 0;
+        int j = 0;
+        while (i < p1.size() && j < p2.size()) {
+            if (p1.get(i).docID == p2.get(j).docID) {
+                result.add(p1.get(i).docID, p1.get(i).score + p2.get(j).score);
+                i++;
+                j++;
+            } else if (p1.get(i).docID < p2.get(j).docID) {
+                i++;
+            } else {
+                j++;
+            }
+        }
+        return result;
     }
 }
