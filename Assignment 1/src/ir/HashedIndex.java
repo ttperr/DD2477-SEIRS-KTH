@@ -29,6 +29,18 @@ public class HashedIndex implements Index {
         //
         // YOUR CODE HERE
         //
+        if (index.containsKey(token)) {
+            PostingsList postingsList = index.get(token);
+            if (postingsList.get(postingsList.size() - 1).docID == docID) {
+                postingsList.get(postingsList.size() - 1).score++;
+            } else {
+                postingsList.add(docID, offset);
+            }
+        } else {
+            PostingsList postingsList = new PostingsList();
+            postingsList.add(docID, offset);
+            index.put(token, postingsList);
+        }
     }
 
 
@@ -40,7 +52,9 @@ public class HashedIndex implements Index {
         //
         // REPLACE THE STATEMENT BELOW WITH YOUR CODE
         //
-        return null;
+        System.out.println("Get postings for: " + token);
+        System.out.println("Postings: " + index.get(token).toString());
+        return index.get(token);
     }
 
 

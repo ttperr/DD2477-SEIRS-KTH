@@ -28,5 +28,16 @@ public class PostingsList {
     // 
     //  YOUR CODE HERE
     //
+    public void add(int docID, double score) {
+        list.add(new PostingsEntry(docID, score));
+    }
+
+    public String toString() {
+        StringBuilder s = new StringBuilder();
+        for (PostingsEntry postingsEntry : list) {
+            s.append(postingsEntry.docID).append(" ");
+        }
+        return s.toString();
+    }
 }
 

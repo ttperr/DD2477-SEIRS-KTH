@@ -21,7 +21,7 @@ public class PostingsEntry implements Comparable<PostingsEntry>, Serializable {
     /**
      *  PostingsEntries are compared by their score (only relevant
      *  in ranked retrieval).
-     *
+     * <p>
      *  The comparison is defined so that entries will be put in 
      *  descending order.
      */
@@ -33,5 +33,13 @@ public class PostingsEntry implements Comparable<PostingsEntry>, Serializable {
     //
     // YOUR CODE HERE
     //
+    public PostingsEntry(int docID, double score) {
+        this.docID = docID;
+        this.score = score;
+    }
+
+    public PostingsEntry(int docID) {
+        this.docID = docID;
+    }
 }
 

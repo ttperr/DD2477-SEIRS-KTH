@@ -28,10 +28,10 @@ public class Searcher {
      *  Searches the index for postings matching the query.
      *  @return A postings list representing the result of the query.
      */
-    public PostingsList search( Query query, QueryType queryType, RankingType rankingType, NormalizationType normType ) { 
+    public PostingsList search( Query query, QueryType queryType, RankingType rankingType, NormalizationType normType ) {
         //
         //  REPLACE THE STATEMENT BELOW WITH YOUR CODE
         //
-        return null;
+        return index.getPostings(query.queryterm.getFirst().term);
     }
 }
