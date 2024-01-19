@@ -16,6 +16,11 @@ BEGIN {
 }
 
 {
+    # If line starts with //, skip it
+    if ($1 == "//") {
+        next
+    }
+
     query_id=$1
     relevance_score=$3
 
