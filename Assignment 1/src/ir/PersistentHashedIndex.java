@@ -159,7 +159,7 @@ public class PersistentHashedIndex implements Index {
     /**
      *  Writes the document names and document lengths to file.
      *
-     * @throws IOException  { exception_description }
+     * @throws IOException  {exception_description}
      */
     private void writeDocInfo() throws IOException {
         FileOutputStream fout = new FileOutputStream( INDEXDIR + "/docInfo" );
@@ -176,7 +176,7 @@ public class PersistentHashedIndex implements Index {
      *  Reads the document names and document lengths from file, and
      *  put them in the appropriate data structures.
      *
-     * @throws     IOException  { exception_description }
+     * @throws     IOException  {exception_description}
      */
     private void readDocInfo() throws IOException {
         File file = new File( INDEXDIR + "/docInfo" );
@@ -225,7 +225,7 @@ public class PersistentHashedIndex implements Index {
         //
         //  REPLACE THE STATEMENT BELOW WITH YOUR CODE
         //
-        return null;
+        return index.get(token);
     }
 
 
@@ -236,6 +236,19 @@ public class PersistentHashedIndex implements Index {
         //
         //  YOUR CODE HERE
         //
+        if (index.containsKey(token)) {
+            PostingsList postingsList = index.get(token);
+            if (postingsList.get(postingsList.size() - 1).docID == docID) {
+                postingsList.get(postingsList.size() - 1).score++;
+                postingsList.get(postingsList.size() - 1).offsets.add(offset);
+            } else {
+                postingsList.add(docID, offset, 1);
+            }
+        } else {
+            PostingsList postingsList = new PostingsList();
+            postingsList.add(docID, offset, 1);
+            index.put(token, postingsList);
+        }
     }
 
 
