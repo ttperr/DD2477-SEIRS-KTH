@@ -65,15 +65,36 @@ public class PersistentHashedIndex implements Index {
         //
         //  YOUR CODE HERE
         //
+        private String key;
+        private long ptr;
+        private int size;
+
+        public Entry(String key, long ptr, int size) {
+            this.key = key;
+            this.ptr = ptr;
+            this.size = size;
+        }
+
+        public String getKey() {
+            return key;
+        }
+
+        public long getPtr() {
+            return ptr;
+        }
+
+        public int getSize() {
+            return size;
+        }
     }
 
 
     // ==================================================================
 
-    
+
     /**
      *  Constructor. Opens the dictionary file and the data file.
-     *  If these files don't exist, they will be created. 
+     *  If these files don't exist, they will be created.
      */
     public PersistentHashedIndex() {
         try {
@@ -95,10 +116,10 @@ public class PersistentHashedIndex implements Index {
      *  Writes data to the data file at a specified place.
      *
      *  @return The number of bytes written.
-     */ 
+     */
     int writeData( String dataString, long ptr ) {
         try {
-            dataFile.seek( ptr ); 
+            dataFile.seek( ptr );
             byte[] data = dataString.getBytes();
             dataFile.write( data );
             return data.length;
@@ -111,7 +132,7 @@ public class PersistentHashedIndex implements Index {
 
     /**
      *  Reads data from the data file
-     */ 
+     */
     String readData( long ptr, int size ) {
         try {
             dataFile.seek( ptr );
@@ -130,7 +151,7 @@ public class PersistentHashedIndex implements Index {
     //  Reading and writing to the dictionary file.
 
     /*
-     *  Writes an entry to the dictionary hash table file. 
+     *  Writes an entry to the dictionary hash table file.
      *
      *  @param entry The key of this entry is assumed to have a fixed length
      *  @param ptr   The place in the dictionary file to store the entry
@@ -146,9 +167,9 @@ public class PersistentHashedIndex implements Index {
      *
      *  @param ptr The place in the dictionary file where to start reading.
      */
-    Entry readEntry( long ptr ) {   
+    Entry readEntry( long ptr ) {
         //
-        //  REPLACE THE STATEMENT BELOW WITH YOUR CODE 
+        //  REPLACE THE STATEMENT BELOW WITH YOUR CODE
         //
         return null;
     }
@@ -204,7 +225,7 @@ public class PersistentHashedIndex implements Index {
 
             // Write the dictionary and the postings list
 
-            // 
+            //
             //  YOUR CODE HERE
             //
         } catch ( IOException e ) {

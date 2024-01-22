@@ -44,9 +44,9 @@ public class PostingsEntry implements Comparable<PostingsEntry>, Serializable {
     @Override
     public String toString() {
         StringBuilder s = new StringBuilder();
-        s.append(docID).append(": ");
+        s.append(docID).append(":");
         for (Integer offset : offsets) {
-            s.append(offset).append(" ");
+            s.append(offset).append(",");
         }
         s.append("(").append(score).append(")");
         return s.toString();

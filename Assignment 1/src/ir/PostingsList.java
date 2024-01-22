@@ -35,7 +35,7 @@ public class PostingsList {
     public String toString() {
         StringBuilder s = new StringBuilder();
         for (PostingsEntry entry : list) {
-            s.append(entry.toString()).append("\n");
+            s.append(entry).append(";");
         }
         return s.toString();
     }
