@@ -1,16 +1,16 @@
-/*  
+/*
  *   This file is part of the computer assignment for the
  *   Information Retrieval course at KTH.
- * 
+ *
  *   Johan Boye, 2017
- */  
+ */
 
 package ir;
 
 import java.util.ArrayList;
 
 /**
- *  Searches an index for results of a query.
+ * Searches an index for results of a query.
  */
 public class Searcher {
 
@@ -71,7 +71,7 @@ public class Searcher {
         while (i < p1.size() && j < p2.size()) {
             if (p1.get(i).docID == p2.get(j).docID) {
                 if (result.size() == 0 || result.get(result.size() - 1).docID != p1.get(i).docID) {
-                    result.add(p1.get(i).docID, p1.get(i).offsets.getFirst(),p1.get(i).score + p2.get(j).score);
+                    result.add(p1.get(i).docID, p1.get(i).offsets.getFirst(), p1.get(i).score + p2.get(j).score);
                 } else {
                     result.get(result.size() - 1).score++;
                 }
@@ -111,7 +111,7 @@ public class Searcher {
                 while (m < p1Offsets.size() && n < p2Offsets.size()) {
                     if (p1Offsets.get(m) + k == p2Offsets.get(n)) {
                         if (result.size() == 0 || result.get(result.size() - 1).docID != p1.get(i).docID) {
-                            result.add(p1.get(i).docID, p2Offsets.get(n),p1.get(i).score + p2.get(j).score);
+                            result.add(p1.get(i).docID, p2Offsets.get(n), p1.get(i).score + p2.get(j).score);
                         } else {
                             result.get(result.size() - 1).score++;
                             result.get(result.size() - 1).offsets.add(p2Offsets.get(n));

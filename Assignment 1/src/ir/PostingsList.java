@@ -1,28 +1,34 @@
-/*  
+/*
  *   This file is part of the computer assignment for the
  *   Information Retrieval course at KTH.
- * 
+ *
  *   Johan Boye, 2017
- */  
+ */
 
 package ir;
 
 import java.util.ArrayList;
 
 public class PostingsList {
-    
-    /** The postings list */
+
+    /**
+     * The postings list
+     */
     private ArrayList<PostingsEntry> list = new ArrayList<PostingsEntry>();
 
 
-    /** Number of postings in this list. */
+    /**
+     * Number of postings in this list.
+     */
     public int size() {
-    return list.size();
+        return list.size();
     }
 
-    /** Returns the ith posting. */
-    public PostingsEntry get( int i ) {
-    return list.get( i );
+    /**
+     * Returns the ith posting.
+     */
+    public PostingsEntry get(int i) {
+        return list.get(i);
     }
 
     // 
@@ -48,7 +54,7 @@ public class PostingsList {
             int docID = Integer.parseInt(parts[0]);
             String[] offsets = parts[1].split(",");
             postingsList.add(docID, Integer.parseInt(offsets[0]), 1);
-            for (int i = 1; i < offsets.length -1; i++) {
+            for (int i = 1; i < offsets.length - 1; i++) {
                 postingsList.get(postingsList.size() - 1).offsets.add(Integer.parseInt(offsets[i]));
                 postingsList.get(postingsList.size() - 1).score++;
             }
