@@ -54,7 +54,7 @@ public class PersistentHashedIndex implements Index {
     /**
      * The dictionary hash table on disk can fit this many entries.
      */
-    public static final long TABLESIZE = 12000017L; // 600000 * 20 next prime number
+    public static final long TABLESIZE = 611953L; //
     public static final int ENTRY_LENGTH = 2 * Long.BYTES + Integer.BYTES;
 
     /**
@@ -90,6 +90,7 @@ public class PersistentHashedIndex implements Index {
         private long ptr;
         private int size;
         private long hash;
+        public static final int BYTES = 2 * Long.BYTES + Integer.BYTES;
 
         public Entry(long ptr, int size, long hash) {
             this.ptr = ptr;
@@ -183,7 +184,7 @@ public class PersistentHashedIndex implements Index {
         //  YOUR CODE HERE
         //
         try {
-            ByteBuffer buffer = ByteBuffer.allocate(ENTRY_LENGTH);
+            ByteBuffer buffer = ByteBuffer.allocate(Entry.BYTES);
             buffer.putLong(entry.getPtr());
             buffer.putInt(entry.getSize());
             buffer.putLong(entry.getHash());
@@ -204,7 +205,7 @@ public class PersistentHashedIndex implements Index {
         //  REPLACE THE STATEMENT BELOW WITH YOUR CODE
         //
         try {
-            ByteBuffer buffer = ByteBuffer.allocate(ENTRY_LENGTH);
+            ByteBuffer buffer = ByteBuffer.allocate(Entry.BYTES);
             dictionaryFile.seek(ptr);
             dictionaryFile.readFully(buffer.array());
             long ptrData = buffer.getLong();
@@ -275,22 +276,24 @@ public class PersistentHashedIndex implements Index {
             //  YOUR CODE HERE
             //
             dictionaryFile.setLength(0); // Remove old contents
-            dictionaryFile.setLength(TABLESIZE);
+            dictionaryFile.setLength(TABLESIZE * Entry.BYTES);
             for (Map.Entry<String, PostingsList> entry : index.entrySet()) {
                 String key = entry.getKey();
                 PostingsList postingsList = entry.getValue();
                 long hash = hashFunction(key);
-                long ptr = free;
-                Entry e = readEntry(hash);
+                long ptrData = free;
+                long ptrDict = hash * Entry.BYTES;
+                Entry e = readEntry(ptrDict);
                 while (e != null) {
                     collisions++;
-                    hash = (hash + ENTRY_LENGTH) % TABLESIZE;
-                    e = readEntry(hash);
+                    hash = (hash + 1) % TABLESIZE;
+                    ptrDict = hash * Entry.BYTES;
+                    e = readEntry(ptrDict);
                 }
                 String postingsListBuilder = key + ";" + postingsList;
                 int size = postingsListBuilder.getBytes().length;
-                writeEntry(new Entry(ptr, size, hash), hash);
-                free += writeData(postingsListBuilder, ptr);
+                writeEntry(new Entry(ptrData, size, hash), ptrDict);
+                free += writeData(postingsListBuilder, ptrData);
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -299,7 +302,7 @@ public class PersistentHashedIndex implements Index {
     }
 
     public static long hashFunction(String s) {
-        return (Math.abs(s.hashCode()) + ENTRY_LENGTH) % TABLESIZE;
+        return Math.abs(s.hashCode()) % TABLESIZE;
     }
 
 
@@ -315,7 +318,8 @@ public class PersistentHashedIndex implements Index {
         //  REPLACE THE STATEMENT BELOW WITH YOUR CODE
         //
         long hash = hashFunction(token);
-        Entry e = readEntry(hash);
+        long ptrDict = hash * Entry.BYTES;
+        Entry e = readEntry(ptrDict);
         while (e != null) {
             if (e.getHash() == hash) {
                 String data = readData(e.getPtr(), e.getSize());
@@ -324,8 +328,9 @@ public class PersistentHashedIndex implements Index {
                     return PostingsList.fromString(postingsListString);
                 }
             }
-            hash = (hash + ENTRY_LENGTH) % TABLESIZE;
-            e = readEntry(hash);
+            hash = (hash + 1) % TABLESIZE;
+            ptrDict = hash * Entry.BYTES;
+            e = readEntry(ptrDict);
         }
         return null;
     }
