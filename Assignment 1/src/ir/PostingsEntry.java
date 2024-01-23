@@ -48,7 +48,7 @@ public class PostingsEntry implements Comparable<PostingsEntry>, Serializable {
         for (Integer offset : offsets) {
             s.append(offset).append(",");
         }
-        s.append("(").append(score).append(")");
+        s.append(score);
         return s.toString();
     }
 }
