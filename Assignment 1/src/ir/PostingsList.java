@@ -38,25 +38,37 @@ public class PostingsList {
         list.add(new PostingsEntry(docID, offset, score));
     }
 
+    public void add(PostingsEntry entry) {
+        list.add(entry);
+    }
+
     public String toString() {
         StringBuilder s = new StringBuilder();
         for (PostingsEntry entry : list) {
-            s.append(entry).append("\n");
+            s.append(entry).append(";");
         }
+        s.deleteCharAt(s.length() - 1);
+        s.append("\n");
         return s.toString();
     }
 
     public static PostingsList fromString(String s) {
         PostingsList postingsList = new PostingsList();
-        String[] entries = s.split("\n");
+        String[] entries = s.split(";");
         for (String entry : entries) {
             String[] parts = entry.split(":");
+            try {
             int docID = Integer.parseInt(parts[0]);
             String[] offsets = parts[1].split(",");
             postingsList.add(docID, Integer.parseInt(offsets[0]), 1);
             for (int i = 1; i < offsets.length - 1; i++) {
                 postingsList.get(postingsList.size() - 1).offsets.add(Integer.parseInt(offsets[i]));
                 postingsList.get(postingsList.size() - 1).score++;
+            }
+            } catch (NumberFormatException e) {
+                System.err.println("Error parsing postings list: " + s);
+                e.printStackTrace();
+                System.exit(1);
             }
         }
         return postingsList;
