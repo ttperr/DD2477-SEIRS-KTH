@@ -12,10 +12,11 @@ public class PersistentScalableHashedIndex extends PersistentHashedIndex impleme
     public static final int MAX_TOKENS = 70000;
     public static final long TABLE_SIZE = 611953L;
     private int threadNumber = 0;
-    private static HashMap<Integer, Boolean> finished = new HashMap<>();
     private static int threadLaunched = 0;
     private static int threadFinished = 0;
-    private static boolean finalRun;
+    private static final Object lockMerge = new Object();
+    private static int mergingThreads = 0;
+    private static volatile boolean finalMerge;
     private static final Queue<String> mergeWaitList = new LinkedList<>();
     private static int collisions = 0;
     private static int lastDocIDInfo = -1;
@@ -95,43 +96,60 @@ public class PersistentScalableHashedIndex extends PersistentHashedIndex impleme
 
     @Override
     public void run() {
-        finalRun = threadNumber == 0;
-        finished.put(threadNumber, false);
+        finalMerge = false;
         try {
             if (threadNumber == 0) {
                 writeDocInfo();
                 dictionaryFile = new RandomAccessFile(INDEX_DIR + "/" + 0 + DICTIONARY_FNAME, "rw");
                 dataFile = new RandomAccessFile(INDEX_DIR + "/" + 0 + DATA_FNAME, "rw");
             }
-            collisions += writeDictData(0);
-            mergeWaitList.add(threadNumber + "");
-            System.out.println("Thread number: " + threadNumber + " wrote, queue size: " + mergeWaitList.size());
 
-            // The thread number 2 will be the merger thread
-            if (threadNumber == 2) {
-                while (!finalRun) {
-                    if (mergeWaitList.size() > 1) {
-                        mergeFiles(false);
-                    }
-                }
-                while (mergeWaitList.size() > 1 || threadFinished < threadLaunched) {
-                    mergeFiles(mergeWaitList.size() == 2);
-                }
-                System.out.println("Collisions: " + collisions);
-                readDocInfo();
+            collisions += writeDictData(0);
+
+            synchronized (lockMerge) {
+                mergeWaitList.add(threadNumber + "");
+                System.out.println("Thread number: " + threadNumber + " wrote, queue size: " + mergeWaitList.size());
             }
             threadFinished++;
-            finished.put(threadNumber, true);
-            if (threadNumber == 0) {
-                while (!finished.get(2)) {
-                    sleep(100);
+
+            while (!finalMerge) {
+                if (mergeWaitList.size() > 1) {
+                    String prefix1;
+                    String prefix2;
+                    synchronized (lockMerge) {
+                        if (mergeWaitList.size() < 2) {
+                            continue;
+                        }
+                        prefix1 = mergeWaitList.poll();
+                        prefix2 = mergeWaitList.poll();
+                        mergingThreads++;
+                    }
+                    System.out.println("-- Merging thread count: " + mergingThreads);
+                    finalMerge = mergeWaitList.isEmpty() && threadFinished > threadLaunched && mergingThreads == 1;
+                    if (prefix1 == null || prefix2 == null) {
+                        System.err.println("Error: prefix1 or prefix2 is null");
+                        System.exit(1);
+                    }
+                    String mergedPrefix = mergeFiles(finalMerge, prefix1, prefix2);
+                    synchronized (lockMerge) {
+                        mergeWaitList.add(mergedPrefix);
+                        mergingThreads--;
+                    }
+                    System.out.println("-- Merging thread count: " + mergingThreads);
                 }
+            }
+            if (threadNumber == 0) {
+                while (!finalMerge || mergingThreads > 0) {
+                    sleep(1000);
+                }
+                readDocInfo();
                 if (threadLaunched == 0 && threadFinished == 1) {
+                    System.out.println("Collisions: " + collisions);
                     System.out.println("Repoint to main index");
                     dictionaryFile = new RandomAccessFile(INDEX_DIR + "/" + 0 + DICTIONARY_FNAME, "rw");
                     dataFile = new RandomAccessFile(INDEX_DIR + "/" + 0 + DATA_FNAME, "rw");
-                }
-                else if (threadFinished > threadLaunched) {
+                } else if (threadFinished > threadLaunched) {
+                    System.out.println("Collisions: " + collisions);
                     System.out.println("Thread finished: " + threadFinished);
                     System.out.println("Thread launched: " + threadLaunched);
                     System.out.println("Repoint to main index");
@@ -139,17 +157,16 @@ public class PersistentScalableHashedIndex extends PersistentHashedIndex impleme
                     dataFile = new RandomAccessFile(INDEX_DIR + "/" + DATA_FNAME, "rw");
                 }
             }
+            System.out.println("Thread number: " + threadNumber + " finished");
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    private void mergeFiles(boolean finalMerge) throws IOException {
-        String prefix1 = mergeWaitList.poll();
-        String prefix2 = mergeWaitList.poll();
+    private String mergeFiles(boolean finalMerge, String prefix1, String prefix2) throws IOException {
         String mergedPrefix = finalMerge ? "" : prefix1 + "x" + prefix2;
 
-        System.out.println("-------- Merging " + prefix1 + " and " + prefix2 + " into " + mergedPrefix);
+        System.out.println("-------- Thread n°" + threadNumber + " merging " + prefix1 + " and " + prefix2 + " into " + mergedPrefix);
         System.out.println("-------- Final merge: " + finalMerge);
 
         String dict1Name = INDEX_DIR + "/" + prefix1 + DICTIONARY_FNAME;
@@ -264,17 +281,19 @@ public class PersistentScalableHashedIndex extends PersistentHashedIndex impleme
             }
             line2 = data2.readLine();
         }
-        mergeWaitList.add(mergedPrefix);
+
         dict1.close();
         dict2.close();
         data1.close();
         data2.close();
         dict.close();
         data.close();
+
         // Delete old files
         ProcessBuilder pb = new ProcessBuilder("rm", dict1Name, dict2Name, data1Name, data2Name);
         pb.start();
         System.out.println("-------- Merged " + mergedPrefix);
+        return mergedPrefix;
     }
 
     private String isInData(String token, RandomAccessFile dict, RandomAccessFile data) throws IOException {
