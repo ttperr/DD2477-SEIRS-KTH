@@ -1,7 +1,6 @@
 package ir;
 
 import java.io.*;
-import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.util.*;
 
@@ -9,8 +8,7 @@ import static java.lang.Thread.sleep;
 
 public class PersistentScalableHashedIndex extends PersistentHashedIndex implements Runnable {
 
-    public static final int MAX_TOKENS = 70000;
-    public static final long TABLE_SIZE = 611953L;
+    public static final int MAX_TOKENS = 250000;
     private int threadNumber = 0;
     private static int threadLaunched = 0;
     private static int threadFinished = 0;
@@ -105,6 +103,7 @@ public class PersistentScalableHashedIndex extends PersistentHashedIndex impleme
             }
 
             collisions += writeDictData(0);
+            index.clear();
 
             synchronized (lockMerge) {
                 mergeWaitList.add(threadNumber + "");
@@ -113,6 +112,8 @@ public class PersistentScalableHashedIndex extends PersistentHashedIndex impleme
             threadFinished++;
 
             while (!finalMerge) {
+                finalMerge = (mergeWaitList.size() == 2 && threadFinished > threadLaunched && mergingThreads == 0) ||
+                        (threadLaunched == 0 && threadFinished == 1 && mergeWaitList.size() == 1);
                 if (mergeWaitList.size() > 1) {
                     String prefix1;
                     String prefix2;
@@ -122,10 +123,10 @@ public class PersistentScalableHashedIndex extends PersistentHashedIndex impleme
                         }
                         prefix1 = mergeWaitList.poll();
                         prefix2 = mergeWaitList.poll();
+                        finalMerge = (mergeWaitList.isEmpty() && threadFinished > threadLaunched && mergingThreads == 0);
                         mergingThreads++;
                     }
                     System.out.println("-- Merging thread count: " + mergingThreads);
-                    finalMerge = mergeWaitList.isEmpty() && threadFinished > threadLaunched && mergingThreads == 1;
                     if (prefix1 == null || prefix2 == null) {
                         System.err.println("Error: prefix1 or prefix2 is null");
                         System.exit(1);
@@ -145,6 +146,7 @@ public class PersistentScalableHashedIndex extends PersistentHashedIndex impleme
                 readDocInfo();
                 if (threadLaunched == 0 && threadFinished == 1) {
                     System.out.println("Collisions: " + collisions);
+                    System.out.println("No thread launched");
                     System.out.println("Repoint to main index");
                     dictionaryFile = new RandomAccessFile(INDEX_DIR + "/" + 0 + DICTIONARY_FNAME, "rw");
                     dataFile = new RandomAccessFile(INDEX_DIR + "/" + 0 + DATA_FNAME, "rw");
@@ -178,7 +180,7 @@ public class PersistentScalableHashedIndex extends PersistentHashedIndex impleme
         RandomAccessFile data1 = new RandomAccessFile(data1Name, "r");
         RandomAccessFile data2 = new RandomAccessFile(data2Name, "r");
         RandomAccessFile dict = new RandomAccessFile(INDEX_DIR + "/" + mergedPrefix + DICTIONARY_FNAME, "rw");
-        RandomAccessFile data = new RandomAccessFile(INDEX_DIR + "/" + mergedPrefix + DATA_FNAME, "rw");
+        BufferedWriter data = new BufferedWriter(new FileWriter(INDEX_DIR + "/" + mergedPrefix + DATA_FNAME));
         dict.setLength(TABLE_SIZE * Entry.BYTES);
 
         long free = 0;
@@ -188,7 +190,7 @@ public class PersistentScalableHashedIndex extends PersistentHashedIndex impleme
         HashMap<String, Boolean> duplicates = new HashMap<>();
 
         while (line1 != null) {
-            String token1 = line1.split("\\[")[0];
+            String token1 = line1.split(">")[0];
             String postingsList1 = line1.substring(token1.length() + 1);
             long hash1 = hashFunction(token1);
             long ptrDict1 = hash1 * Entry.BYTES;
@@ -233,24 +235,16 @@ public class PersistentScalableHashedIndex extends PersistentHashedIndex impleme
                     j++;
                 }
                 // Writing merged posting list
-                String stringMerged = token1 + "[" + postingListMerged;
+                String stringMerged = token1 + ">" + postingListMerged;
                 int size = stringMerged.getBytes().length;
-                ByteBuffer buffer = ByteBuffer.allocate(size);
-                buffer.put(stringMerged.getBytes());
-                data.write(buffer.array());
-                buffer.clear();
+                data.write(stringMerged);
                 writeEntry(new Entry(free, size, hash1), ptrDict1, dict);
-
                 free += size;
             } else {
                 line1 = line1 + "\n";
                 int size = line1.getBytes().length;
-                ByteBuffer buffer = ByteBuffer.allocate(size);
-                buffer.put(line1.getBytes());
-                data.write(buffer.array());
-                buffer.clear();
+                data.write(line1);
                 writeEntry(new Entry(free, size, hash1), ptrDict1, dict);
-
                 free += size;
             }
             line1 = data1.readLine();
@@ -259,16 +253,13 @@ public class PersistentScalableHashedIndex extends PersistentHashedIndex impleme
         data2.seek(0);
         line2 = data2.readLine();
         while (line2 != null) {
-            String token2 = line2.split("\\[")[0];
+            String token2 = line2.split(">")[0];
             if (!duplicates.containsKey(token2)) {
                 long hash2 = hashFunction(token2);
                 long ptrDict2 = hash2 * Entry.BYTES;
                 line2 = line2 + "\n";
                 int size = line2.getBytes().length;
-                ByteBuffer buffer = ByteBuffer.allocate(size);
-                buffer.put(line2.getBytes());
-                data.write(buffer.array());
-                buffer.clear();
+                data.write(line2);
                 Entry temp = readEntry(ptrDict2, dict);
                 while (temp != null) {
                     hash2 = (hash2 + 1) % TABLE_SIZE;
@@ -276,7 +267,6 @@ public class PersistentScalableHashedIndex extends PersistentHashedIndex impleme
                     temp = readEntry(ptrDict2, dict);
                 }
                 writeEntry(new Entry(free, size, hash2), ptrDict2, dict);
-
                 free += size;
             }
             line2 = data2.readLine();
@@ -307,7 +297,7 @@ public class PersistentScalableHashedIndex extends PersistentHashedIndex impleme
                 data.readFully(buffer.array());
                 String line = new String(buffer.array());
                 buffer.clear();
-                String token2 = line.split("\\[")[0];
+                String token2 = line.split(">")[0];
                 if (token2.equals(token)) {
                     return line;
                 }

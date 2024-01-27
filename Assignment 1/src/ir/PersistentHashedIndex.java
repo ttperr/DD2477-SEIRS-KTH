@@ -28,7 +28,7 @@ public class PersistentHashedIndex implements Index {
     /**
      * The directory where the persistent index files are stored.
      */
-    public static final String INDEX_DIR = "../../index";
+    public static final String INDEX_DIR = "../../indexGuardian";
 
     /**
      * The dictionary file name
@@ -53,7 +53,7 @@ public class PersistentHashedIndex implements Index {
     /**
      * The dictionary hash table on disk can fit this many entries.
      */
-    public static final long TABLE_SIZE = 611953L; //
+    public static final long TABLE_SIZE = 3500017L;// 611953L;//
 
     /**
      * The dictionary hash table is stored in this file.
@@ -296,7 +296,7 @@ public class PersistentHashedIndex implements Index {
                 ptrDict = hash * Entry.BYTES;
                 e = readEntry(ptrDict, dictionaryFile);
             }
-            String postingsListBuilder = key + "[" + postingsList;
+            String postingsListBuilder = key + ">" + postingsList;
             int size = postingsListBuilder.getBytes().length;
             writeEntry(new Entry(ptrData, size, hash), ptrDict, dictionaryFile);
             free += writeData(postingsListBuilder, ptrData);
