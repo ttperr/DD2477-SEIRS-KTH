@@ -280,6 +280,13 @@ public class PersistentHashedIndex implements Index {
         System.err.println(collisions + " collisions");
     }
 
+    /**
+     * Write the dictionary and the postings list in the data
+     *
+     * @param collisions The number of collisions already found
+     * @return The number of collisions
+     * @throws IOException {exception_description}
+     */
     protected int writeDictData(int collisions) throws IOException {
         dictionaryFile.setLength(0); // Remove old contents
         dictionaryFile.setLength(TABLE_SIZE * Entry.BYTES);
@@ -304,6 +311,9 @@ public class PersistentHashedIndex implements Index {
         return collisions;
     }
 
+    /**
+     * Returns the hash value of a string modulo the table size.
+     */
     public long hashFunction(String s) {
         return Math.abs(s.hashCode()) % TABLE_SIZE;
     }

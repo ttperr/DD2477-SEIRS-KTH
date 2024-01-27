@@ -42,6 +42,12 @@ public class PostingsList {
         list.add(entry);
     }
 
+    /**
+     * Converts the postings list to a string
+     *
+     * @return the string
+     */
+    @Override
     public String toString() {
         StringBuilder s = new StringBuilder();
         for (PostingsEntry entry : list) {
@@ -52,19 +58,26 @@ public class PostingsList {
         return s.toString();
     }
 
+
+    /**
+     * Converts a string to a postings list
+     *
+     * @param s the string
+     * @return the postings list
+     */
     public static PostingsList fromString(String s) {
         PostingsList postingsList = new PostingsList();
         String[] entries = s.split(";");
         for (String entry : entries) {
             String[] parts = entry.split(":");
             try {
-            int docID = Integer.parseInt(parts[0]);
-            String[] offsets = parts[1].split(",");
-            postingsList.add(docID, Integer.parseInt(offsets[0]), 1);
-            for (int i = 1; i < offsets.length - 1; i++) {
-                postingsList.get(postingsList.size() - 1).offsets.add(Integer.parseInt(offsets[i]));
-                postingsList.get(postingsList.size() - 1).score++;
-            }
+                int docID = Integer.parseInt(parts[0]);
+                String[] offsets = parts[1].split(",");
+                postingsList.add(docID, Integer.parseInt(offsets[0]), 1);
+                for (int i = 1; i < offsets.length - 1; i++) {
+                    postingsList.get(postingsList.size() - 1).offsets.add(Integer.parseInt(offsets[i]));
+                    postingsList.get(postingsList.size() - 1).score++;
+                }
             } catch (NumberFormatException e) {
                 System.err.println("Error parsing postings list: " + s);
                 e.printStackTrace();

@@ -8,6 +8,9 @@ import static java.lang.Thread.sleep;
 
 public class PersistentScalableHashedIndex extends PersistentHashedIndex implements Runnable {
 
+    /**
+     * Maximum number of tokens to keep in memory
+     */
     public static final int MAX_TOKENS = 250000;
     private int threadNumber = 0;
     private static int threadLaunched = 0;
@@ -23,7 +26,7 @@ public class PersistentScalableHashedIndex extends PersistentHashedIndex impleme
     public PersistentScalableHashedIndex() {
         try {
             readDocInfo();
-        } catch (FileNotFoundException e) {
+        } catch (FileNotFoundException ignored) {
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -92,6 +95,10 @@ public class PersistentScalableHashedIndex extends PersistentHashedIndex impleme
         System.err.println("Writing took: " + elapsedTime / 1000F + "s");
     }
 
+    /**
+     * Run function of thread. Starts to write index and then merge with other threads.
+     * If no thread is launched, repoint to main index.
+     */
     @Override
     public void run() {
         finalMerge = false;
@@ -165,6 +172,16 @@ public class PersistentScalableHashedIndex extends PersistentHashedIndex impleme
         }
     }
 
+    /**
+     * Merge two files index written into one.
+     *
+     * @param finalMerge true if it is the final merge
+     *                   false if it is an intermediate merge
+     * @param prefix1    prefix of the first file to merge
+     *                   if finalMerge is true, prefix1 is the prefix of the main index
+     * @param prefix2    prefix of the second file to merge
+     * @return the prefix of the merged file
+     */
     private String mergeFiles(boolean finalMerge, String prefix1, String prefix2) throws IOException {
         String mergedPrefix = finalMerge ? "" : prefix1 + "x" + prefix2;
 
@@ -286,6 +303,16 @@ public class PersistentScalableHashedIndex extends PersistentHashedIndex impleme
         return mergedPrefix;
     }
 
+
+    /**
+     * Checks if the token is in the data file.
+     *
+     * @param token the token to check
+     * @param dict  the dictionary file
+     * @param data  the data file
+     * @return the line of the token if it is in the data file, null otherwise
+     * @throws IOException {exception_description}
+     */
     private String isInData(String token, RandomAccessFile dict, RandomAccessFile data) throws IOException {
         long hash = hashFunction(token);
         long ptrDict = hash * Entry.BYTES;
