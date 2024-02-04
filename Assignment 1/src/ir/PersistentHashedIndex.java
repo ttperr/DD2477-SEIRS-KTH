@@ -28,7 +28,7 @@ public class PersistentHashedIndex implements Index {
     /**
      * The directory where the persistent index files are stored.
      */
-    public static final String INDEX_DIR = "../../indexGuardian";
+    public static final String INDEX_DIR = "../../indexDavis";
 
     /**
      * The dictionary file name

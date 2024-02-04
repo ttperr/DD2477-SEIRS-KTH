@@ -86,5 +86,15 @@ public class PostingsList {
         }
         return postingsList;
     }
+
+    /**
+     * Sorts the postings list by score
+     *
+     * @return the sorted postings list
+     */
+    public PostingsList sort() {
+        list.sort(PostingsEntry::compareTo);
+        return this;
+    }
 }
 

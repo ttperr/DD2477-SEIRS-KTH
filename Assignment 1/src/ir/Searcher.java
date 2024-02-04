@@ -45,11 +45,16 @@ public class Searcher {
             return intersectionQuery(query);
         } else if (queryType == QueryType.PHRASE_QUERY) {
             return phraseQuery(query);
-        }/* else if (queryType == QueryType.RANKED_QUERY) {
-            return rankedQuery(query, rankingType, normType);
-        } */ else {
-            return null;
+        } else if (queryType == QueryType.RANKED_QUERY) {
+            if (rankingType == RankingType.TF_IDF) {
+                return rankedQueryTFIDF(query, normType);
+            } else if (rankingType == RankingType.PAGERANK) {
+                return null;
+            } else if (rankingType == RankingType.COMBINATION) {
+                return null;
+            }
         }
+        return null;
     }
 
     private PostingsList intersectionQuery(Query query) {
@@ -135,4 +140,31 @@ public class Searcher {
         return result;
     }
 
+    private PostingsList rankedQueryTFIDF(Query query, NormalizationType normType) {
+        int N = index.docLengths.size();
+        double[] scores = new double[N];
+        PostingsList result = new PostingsList();
+        for (int i = 0; i < query.queryterm.size(); i++) {
+            PostingsList postingsList = index.getPostings(query.queryterm.get(i).term);
+            if (postingsList != null) {
+                double idf = Math.log((double) N / postingsList.size());
+                for (int j = 0; j < postingsList.size(); j++) {
+                    int docID = postingsList.get(j).docID;
+                    int tf = postingsList.get(j).offsets.size();
+                    double tfidf = tf * idf;
+                    if (normType == NormalizationType.NUMBER_OF_WORDS) {
+                        tfidf /= index.docLengths.get(docID);
+                    }
+                    scores[docID] += tfidf;
+                }
+            }
+        }
+        for (int i = 0; i < N; i++) {
+            if (scores[i] > 0) {
+                result.add(i, 0, scores[i]);
+            }
+        }
+        result.sort();
+        return result;
+    }
 }
