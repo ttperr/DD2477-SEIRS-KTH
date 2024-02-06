@@ -1,7 +1,6 @@
 import numpy as np
 data = np.loadtxt('Assignment 1/task 1.5.txt', comments='//',
                   delimiter=' ', usecols=(0, 2), dtype=int)
-print(data)
 
 run_numbers = data[:, 0]
 true_label = data[:, 1]
