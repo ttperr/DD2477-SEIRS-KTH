@@ -62,6 +62,9 @@ public class Searcher {
         for (int i = 0; i < query.queryterm.size(); i++) {
             postingsLists.add(index.getPostings(query.queryterm.get(i).term));
         }
+        if (postingsLists.isEmpty()) {
+            return new PostingsList();
+        }
         PostingsList result = postingsLists.getFirst();
         for (int i = 1; i < postingsLists.size(); i++) {
             result = intersect(result, postingsLists.get(i));
@@ -95,6 +98,9 @@ public class Searcher {
         ArrayList<PostingsList> postingsLists = new ArrayList<>();
         for (int i = 0; i < query.queryterm.size(); i++) {
             postingsLists.add(index.getPostings(query.queryterm.get(i).term));
+        }
+        if (postingsLists.isEmpty()) {
+            return new PostingsList();
         }
         PostingsList result = postingsLists.getFirst();
         for (int i = 1; i < postingsLists.size(); i++) {
@@ -154,6 +160,8 @@ public class Searcher {
                     double tfidf = tf * idf;
                     if (normType == NormalizationType.NUMBER_OF_WORDS) {
                         tfidf /= index.docLengths.get(docID);
+                    } if (normType == NormalizationType.EUCLIDEAN) {
+                        //tfidf /= Math.sqrt(index.docLengths.get(docID));
                     }
                     scores[docID] += tfidf;
                 }
