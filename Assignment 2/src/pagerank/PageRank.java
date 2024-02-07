@@ -142,28 +142,34 @@ public class PageRank {
             inverseOut[k] = 1.0 / out[k];
         }
 
-
         for (int i = 0; i < maxIterations; i++) {
             scores = newScores.clone();
-            for (int j = 0; j < numberOfDocs; j++) {
-                newScores[j] = 0;
-                for (int k = 0; k < numberOfDocs; k++) {
-                    if (link.get(k) != null && link.get(k).get(j) != null) {
-                        newScores[j] += scores[k] * inverseOut[k];
+            double normalizer = 0.0;
+            for (int p = 0; p < numberOfDocs; p++) {
+                newScores[p] = 0;
+                for (int q = 0; q < numberOfDocs; q++) {
+                    if (link.get(q) != null && link.get(q).get(p) != null) {
+                        newScores[p] += scores[q] * inverseOut[q];
                     }
                 }
-                newScores[j] = BORED / numberOfDocs + (1 - BORED) * newScores[j];
+                newScores[p] = BORED / numberOfDocs + (1 - BORED) * newScores[p];
+                normalizer += newScores[p];
+            }
+            // Normalization
+            for (int p = 0; p < numberOfDocs; p++) {
+                newScores[p] /= normalizer;
             }
             boolean isConverged = convergenceCriteria(scores, newScores);
             System.out.println("Iteration " + i);
             if (isConverged) {
                 break;
             }
-            if (System.currentTimeMillis() - startTime > 180000) {
-                System.err.println("Time limit reached");
-                break;
-            }
+//            if (System.currentTimeMillis() - startTime > 180000) {
+//                System.err.println("Time limit reached");
+//                break;
+//            }
         }
+
         printPageRank(newScores, true);
         double estimatedTime = (System.currentTimeMillis() - startTime) / 1000.0;
         System.err.println("Done! Time: " + estimatedTime + "s");
@@ -221,8 +227,8 @@ public class PageRank {
                     docTitle[j] = line.split(";")[1];
                 }
             }
-            for (int i = 0; i < 30; i++) {
-                writer.write(docName[resultList.get(i)] + ": " + String.format("%.5f", scores[resultList.get(i)]) + ": " + docTitle[i] + "\n");
+            for (int i = 0; i < resultList.size(); i++) {
+                writer.write(docName[resultList.get(i)] + ": " + scores[resultList.get(i)] + ": " + docTitle[i] + "\n");
             }
             writer.close();
         } catch (IOException e) {
