@@ -1,3 +1,5 @@
+package pagerank;
+
 import java.util.*;
 import java.io.*;
 
