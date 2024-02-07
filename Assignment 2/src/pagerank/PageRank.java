@@ -131,9 +131,14 @@ public class PageRank {
      * aP, aP^2, aP^3... until aP^i = aP^(i+1).
      */
     void iterate(int numberOfDocs, int maxIterations) {
-
         // YOUR CODE HERE
-
+        double[] scores = new double[numberOfDocs];
+        double[] newScores = new double[numberOfDocs];
+        newScores[0] = 1;
+        for (int i = 0; i < numberOfDocs; i++) {
+            scores = newScores;
+            // TODO: Multiply with the transition matrix
+        }
     }
 
 
