@@ -7,6 +7,8 @@
 
 package ir;
 
+import pagerank.PageRank;
+
 import java.util.ArrayList;
 
 /**
@@ -25,11 +27,20 @@ public class Searcher {
     KGramIndex kgIndex;
 
     /**
+     * PageRank object
+     */
+    PageRank pageRank;
+
+    final double TFIDF_WEIGHT = 0.4;
+    final double PR_WEIGHT = 0.6;
+
+    /**
      * Constructor
      */
     public Searcher(Index index, KGramIndex kgIndex) {
         this.index = index;
         this.kgIndex = kgIndex;
+        pageRank = new PageRank("../../Assignment 2/src/pagerank/linksDavis.txt");
     }
 
     /**
@@ -49,9 +60,9 @@ public class Searcher {
             if (rankingType == RankingType.TF_IDF) {
                 return rankedQueryTFIDF(query, normType);
             } else if (rankingType == RankingType.PAGERANK) {
-                return null;
+                return rankedQueryPageRank(query);
             } else if (rankingType == RankingType.COMBINATION) {
-                return null;
+                return rankedQueryCombination(query, normType);
             }
         }
         return null;
@@ -151,26 +162,79 @@ public class Searcher {
         double[] scores = new double[N];
         PostingsList result = new PostingsList();
         for (int i = 0; i < query.queryterm.size(); i++) {
-            PostingsList postingsList = index.getPostings(query.queryterm.get(i).term);
-            if (postingsList != null) {
-                double idf = Math.log((double) N / postingsList.size());
-                for (int j = 0; j < postingsList.size(); j++) {
-                    int docID = postingsList.get(j).docID;
-                    int tf = postingsList.get(j).offsets.size();
-                    double tfidf = tf * idf;
-                    if (normType == NormalizationType.NUMBER_OF_WORDS) {
-                        tfidf /= index.docLengths.get(docID);
-                    } if (normType == NormalizationType.EUCLIDEAN) {
-                        //tfidf /= Math.sqrt(index.docLengths.get(docID));
-                    }
-                    scores[docID] += tfidf;
-                }
-            }
+            computeTFIDF(query, normType, i, N, scores);
         }
         for (int i = 0; i < N; i++) {
             if (scores[i] > 0) {
                 result.add(i, 0, scores[i]);
             }
+        }
+        result.sort();
+        return result;
+    }
+
+    private void computeTFIDF(Query query, NormalizationType normType, int i, int N, double[] scores) {
+        PostingsList postingsList = index.getPostings(query.queryterm.get(i).term);
+        if (postingsList != null) {
+            double idf = Math.log((double)N / postingsList.size());
+            for (int j = 0; j < postingsList.size(); j++) {
+                int docID = postingsList.get(j).docID;
+                int tf = postingsList.get(j).offsets.size();
+                double tfidf = tf * idf;
+                if (normType == NormalizationType.NUMBER_OF_WORDS) {
+                    tfidf /= index.docLengths.get(docID);
+                } if (normType == NormalizationType.EUCLIDEAN) {
+                    //tfidf /= Math.sqrt(index.docLengths.get(docID));
+                }
+                scores[docID] += tfidf;
+            }
+        }
+    }
+
+    private PostingsList rankedQueryPageRank(Query query) {
+        int N = index.docLengths.size();
+        double[] scores = new double[N];
+        PostingsList result = new PostingsList();
+        for (int i = 0; i < query.queryterm.size(); i++) {
+            computePageRank(query, i, scores);
+        }
+        for (int i = 0; i < N; i++) {
+            if (scores[i] > 0) {
+                result.add(i, 0, scores[i]);
+            }
+        }
+        result.sort();
+        return result;
+    }
+
+    private void computePageRank(Query query, int i, double[] scores) {
+        PostingsList postingsList = index.getPostings(query.queryterm.get(i).term);
+        if (postingsList != null) {
+            for (int j = 0; j < postingsList.size(); j++) {
+                int docID = postingsList.get(j).docID;
+                String docName = index.docNames.get(docID);
+                scores[docID] += pageRank.getScore(docName);
+            }
+        }
+    }
+
+    private PostingsList rankedQueryCombination(Query query, NormalizationType normType) {
+        PostingsList result = new PostingsList();
+        double[] scores = new double[index.docLengths.size()];
+        for (int i = 0; i < query.queryterm.size(); i++) {
+            computeTFIDF(query, normType, i, index.docLengths.size(), scores);
+        }
+        ArrayList<PostingsEntry> tfidf = new ArrayList<>();
+        for (int i = 0; i < scores.length; i++) {
+            if (scores[i] > 0) {
+                tfidf.add(new PostingsEntry(i, 0, scores[i]));
+            }
+        }
+        for (PostingsEntry postingsEntry : tfidf) {
+            int docID = postingsEntry.docID;
+            String docName = index.docNames.get(docID);
+            double score = TFIDF_WEIGHT * postingsEntry.score + PR_WEIGHT * pageRank.getScore(docName);
+            result.add(docID, 0, score);
         }
         result.sort();
         return result;

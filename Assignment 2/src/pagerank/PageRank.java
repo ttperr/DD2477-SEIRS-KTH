@@ -51,6 +51,17 @@ public class PageRank {
      */
     final static double EPSILON = 0.0001;
 
+    /**
+     * The score of every document
+     */
+    static double[] scores;
+
+    /**
+     * The docID from the real name of the document
+     */
+    HashMap<String, Integer> docNumberMap = new HashMap<>();
+
+    String[] docTitle = new String[MAX_NUMBER_OF_DOCS];
 
     /* --------------------------------------------- */
 
@@ -58,6 +69,7 @@ public class PageRank {
     public PageRank(String filename) {
         int noOfDocs = readDocs(filename);
         iterate(noOfDocs, 1000);
+        System.out.println(docNumber.get("Zombie_Attack_Response_Guide.f"));
     }
 
 
@@ -134,10 +146,13 @@ public class PageRank {
         // YOUR CODE HERE
         System.err.println("Started Iteration...");
         double startTime = System.currentTimeMillis();
-        double[] scores;
+        scores = new double[numberOfDocs];
         double[] newScores = new double[numberOfDocs];
         newScores[0] = 1.0;
         double[] inverseOut = new double[numberOfDocs];
+
+        docTitle = readTitles();
+
         for (int k = 0; k < numberOfDocs; k++) {
             inverseOut[k] = 1.0 / out[k];
         }
@@ -156,12 +171,22 @@ public class PageRank {
                 normalizer += newScores[p];
             }
             // Normalization
-            for (int p = 0; p < numberOfDocs; p++) {
-                newScores[p] /= normalizer;
-            }
+//            for (int p = 0; p < numberOfDocs; p++) {
+//                newScores[p] /= normalizer;
+//            }
             boolean isConverged = convergenceCriteria(scores, newScores);
             System.out.println("Iteration " + i);
             if (isConverged) {
+                // TODO: Done at the end because is more closer to the given result & more efficient
+                for (int p = 0; p < numberOfDocs; p++) {
+                    newScores[p] /= normalizer;
+                    // round to 5 decimal places
+                    scores[p] = Math.round(newScores[p] * 100000.0) / 100000.0;
+                    if (docNumberMap.containsKey(docTitle[Integer.parseInt(docName[p])])) {
+                        System.out.println(docName[p] + ": " + scores[p] + ": " + docTitle[Integer.parseInt(docName[p])]);
+                    }
+                    docNumberMap.put(docTitle[Integer.parseInt(docName[p])], p);
+                }
                 break;
             }
 //            if (System.currentTimeMillis() - startTime > 180000) {
@@ -169,7 +194,6 @@ public class PageRank {
 //                break;
 //            }
         }
-
         printPageRank(newScores, true);
         double estimatedTime = (System.currentTimeMillis() - startTime) / 1000.0;
         System.err.println("Done! Time: " + estimatedTime + "s");
@@ -209,31 +233,48 @@ public class PageRank {
         // Write in the file
         try {
             BufferedWriter writer = new BufferedWriter(new FileWriter("src/pagerank/davis_top_30_test.txt"));
-            BufferedReader reader = new BufferedReader(new FileReader("src/pagerank/davisTitles.txt"));
-            String line;
-            int docID;
-            String[] docTitle = new String[resultList.size()];
-            while ((line = reader.readLine()) != null) {
-                docID = Integer.parseInt(line.split(";")[0]);
-                int indexOfDocID = -1;
-                for (int i = 0; i < docName.length; i++) {
-                    if (Integer.parseInt(docName[i]) == docID) {
-                        indexOfDocID = i;
-                        break;
-                    }
-                }
-                int j = resultList.indexOf(indexOfDocID);
-                if (j != -1) {
-                    docTitle[j] = line.split(";")[1];
-                }
-            }
             for (int i = 0; i < resultList.size(); i++) {
-                writer.write(docName[resultList.get(i)] + ": " + scores[resultList.get(i)] + ": " + docTitle[i] + "\n");
+                writer.write(docName[resultList.get(i)] + ": " + scores[resultList.get(i)] + ": " +
+                        "../../data/davisWiki/" + docTitle[i] + "\n");
             }
             writer.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    private String[] readTitles() {
+        String[] docTitle = new String[MAX_NUMBER_OF_DOCS];
+        try {
+            BufferedReader reader = new BufferedReader(new FileReader("src/pagerank/davisTitles.txt"));
+            String line;
+            int docID;
+            while ((line = reader.readLine()) != null) {
+                docID = Integer.parseInt(line.split(";")[0]);
+                int indexOfDocID = -1;
+                for (int i = 0; i < scores.length; i++) {
+                    if (Integer.parseInt(docName[i]) == docID) {
+                        indexOfDocID = i;
+                        break;
+                    }
+                }
+                if (indexOfDocID != -1) {
+                    docTitle[indexOfDocID] = line.split(";")[1];
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return docTitle;
+    }
+
+    public double getScore(int docID) {
+        return scores[docID];
+    }
+
+    public double getScore(String docName) {
+        String fileName = docName.lastIndexOf("/") > 0 ? docName.substring(docName.lastIndexOf("/") + 1) : docName;
+        return scores[docNumberMap.get(fileName)];
     }
 
     /* --------------------------------------------- */
