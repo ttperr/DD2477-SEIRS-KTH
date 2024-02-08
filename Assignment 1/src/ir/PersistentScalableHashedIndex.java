@@ -11,7 +11,7 @@ public class PersistentScalableHashedIndex extends PersistentHashedIndex impleme
     /**
      * Maximum number of tokens to keep in memory
      */
-    public static final int MAX_TOKENS = 250000;
+    public static final int MAX_TOKENS = 50000; // TODO: Change to 250000 if guardian
     private int threadNumber = 0;
     private static int threadLaunched = 0;
     private static int threadFinished = 0;

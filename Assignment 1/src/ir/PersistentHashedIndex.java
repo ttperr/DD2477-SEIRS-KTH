@@ -28,7 +28,7 @@ public class PersistentHashedIndex implements Index {
     /**
      * The directory where the persistent index files are stored.
      */
-    public static final String INDEX_DIR = "../../indexDavis";
+    public static final String INDEX_DIR = "../../indexDavis"; // TODO: Change this to the path of the index directory
 
     /**
      * The dictionary file name
@@ -53,7 +53,7 @@ public class PersistentHashedIndex implements Index {
     /**
      * The dictionary hash table on disk can fit this many entries.
      */
-    public static final long TABLE_SIZE = 3500017L;// 611953L;//
+    public static final long TABLE_SIZE = 611953L;// 3500017L;// TODO: Change this to the size of the dictionary hash table
 
     /**
      * The dictionary hash table is stored in this file.
