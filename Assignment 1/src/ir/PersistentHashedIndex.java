@@ -388,12 +388,12 @@ public class PersistentHashedIndex implements Index {
 
     @Override
     public void putDocEuclideanLength(int docID) {
-        int length = 0;
+        double length = 0;
         for (Map.Entry<String, PostingsList> entry : index.entrySet()) {
             PostingsList postingsList = entry.getValue();
             for (int i = 0; i < postingsList.size(); i++) {
                 if (postingsList.get(i).docID == docID) {
-                    length += (postingsList.get(i).offsets.size())*(postingsList.get(i).offsets.size());
+                    length += Math.pow(postingsList.get(i).score, 2);
                 }
             }
         }
