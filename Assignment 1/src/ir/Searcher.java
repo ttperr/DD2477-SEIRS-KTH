@@ -31,8 +31,8 @@ public class Searcher {
      */
     PageRank pageRank;
 
-    final double TFIDF_WEIGHT = 0.4;
-    final double PR_WEIGHT = 0.6;
+    final double TFIDF_WEIGHT = 1;
+    final double PR_WEIGHT = 750;
 
     /**
      * Constructor
@@ -224,7 +224,9 @@ public class Searcher {
         ArrayList<PostingsEntry> tfidf = new ArrayList<>();
         for (int i = 0; i < scores.length; i++) {
             if (scores[i] > 0) {
-                tfidf.add(new PostingsEntry(i, 0, scores[i]));
+                if (normType == NormalizationType.NUMBER_OF_WORDS) {
+                    tfidf.add(new PostingsEntry(i, 0, scores[i]/index.docLengths.get(i)));
+                }
             }
         }
         for (PostingsEntry postingsEntry : tfidf) {
