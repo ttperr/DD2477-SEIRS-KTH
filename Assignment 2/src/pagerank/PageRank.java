@@ -11,6 +11,10 @@ public class PageRank {
      */
     final static int MAX_NUMBER_OF_DOCS = 2000000;
 
+    public static final String TITLES_TXT = "/Users/ttperr/Documents/Git/Pro/3A/DD2477-SEIRS-KTH/Assignment 2/src/pagerank/davisTitles.txt";
+    public static final String TOP_30_TEST_TXT = "/Users/ttperr/Documents/Git/Pro/3A/DD2477-SEIRS-KTH/Assignment 2/src/pagerank/davis_top_30_test.txt";
+    public static final String DATA_WIKI = "../../data/davisWiki/";
+
     /**
      * Mapping from document names to document numbers.
      */
@@ -69,7 +73,8 @@ public class PageRank {
     public PageRank(String filename) {
         int noOfDocs = readDocs(filename);
         iterate(noOfDocs, 1000);
-        System.out.println(docNumber.get("Zombie_Attack_Response_Guide.f"));
+        String testName = "JasonRifkind.f";
+        // System.out.println(docNumberMap.get(testName) + " : " + scores[docNumberMap.get(testName)]);
     }
 
 
@@ -90,13 +95,13 @@ public class PageRank {
             while ((line = in.readLine()) != null && fileIndex < MAX_NUMBER_OF_DOCS) {
                 int index = line.indexOf(";");
                 String title = line.substring(0, index);
-                Integer fromdoc = docNumber.get(title);
+                Integer from_doc = docNumber.get(title);
                 //  Have we seen this document before?
-                if (fromdoc == null) {
+                if (from_doc == null) {
                     // This is a previously unseen doc, so add it to the table.
-                    fromdoc = fileIndex++;
-                    docNumber.put(title, fromdoc);
-                    docName[fromdoc] = title;
+                    from_doc = fileIndex++;
+                    docNumber.put(title, from_doc);
+                    docName[from_doc] = title;
                 }
                 // Check all outlinks.
                 StringTokenizer tok = new StringTokenizer(line.substring(index + 1), ",");
@@ -110,13 +115,13 @@ public class PageRank {
                         docName[otherDoc] = otherTitle;
                     }
                     // Set the probability to 0 for now, to indicate that there is
-                    // a link from fromdoc to otherDoc.
-                    if (link.get(fromdoc) == null) {
-                        link.put(fromdoc, new HashMap<Integer, Boolean>());
+                    // a link from from_doc to otherDoc.
+                    if (link.get(from_doc) == null) {
+                        link.put(from_doc, new HashMap<Integer, Boolean>());
                     }
-                    if (link.get(fromdoc).get(otherDoc) == null) {
-                        link.get(fromdoc).put(otherDoc, true);
-                        out[fromdoc]++;
+                    if (link.get(from_doc).get(otherDoc) == null) {
+                        link.get(from_doc).put(otherDoc, true);
+                        out[from_doc]++;
                     }
                 }
             }
@@ -170,10 +175,6 @@ public class PageRank {
                 newScores[p] = BORED / numberOfDocs + (1 - BORED) * newScores[p];
                 normalizer += newScores[p];
             }
-            // Normalization
-//            for (int p = 0; p < numberOfDocs; p++) {
-//                newScores[p] /= normalizer;
-//            }
             boolean isConverged = convergenceCriteria(scores, newScores);
             System.out.println("Iteration " + i);
             if (isConverged) {
@@ -182,21 +183,14 @@ public class PageRank {
                     newScores[p] /= normalizer;
                     // round to 5 decimal places
                     scores[p] = Math.round(newScores[p] * 100000.0) / 100000.0;
-                    if (docNumberMap.containsKey(docTitle[Integer.parseInt(docName[p])])) {
-                        System.out.println(docName[p] + ": " + scores[p] + ": " + docTitle[Integer.parseInt(docName[p])]);
-                    }
-                    docNumberMap.put(docTitle[Integer.parseInt(docName[p])], p);
+                    docNumberMap.put(docTitle[p], p);
                 }
                 break;
             }
-//            if (System.currentTimeMillis() - startTime > 180000) {
-//                System.err.println("Time limit reached");
-//                break;
-//            }
         }
         printPageRank(newScores, true);
         double estimatedTime = (System.currentTimeMillis() - startTime) / 1000.0;
-        System.err.println("Done! Time: " + estimatedTime + "s");
+        System.err.println("PageRank done! Time: " + estimatedTime + "s");
     }
 
     private boolean convergenceCriteria(double[] tab1, double[] tab2) {
@@ -232,10 +226,10 @@ public class PageRank {
         }
         // Write in the file
         try {
-            BufferedWriter writer = new BufferedWriter(new FileWriter("src/pagerank/davis_top_30_test.txt"));
+            BufferedWriter writer = new BufferedWriter(new FileWriter(TOP_30_TEST_TXT));
             for (int i = 0; i < resultList.size(); i++) {
                 writer.write(docName[resultList.get(i)] + ": " + scores[resultList.get(i)] + ": " +
-                        "../../data/davisWiki/" + docTitle[i] + "\n");
+                        DATA_WIKI + docTitle[resultList.get(i)] + "\n");
             }
             writer.close();
         } catch (IOException e) {
@@ -246,7 +240,7 @@ public class PageRank {
     private String[] readTitles() {
         String[] docTitle = new String[MAX_NUMBER_OF_DOCS];
         try {
-            BufferedReader reader = new BufferedReader(new FileReader("src/pagerank/davisTitles.txt"));
+            BufferedReader reader = new BufferedReader(new FileReader(TITLES_TXT));
             String line;
             int docID;
             while ((line = reader.readLine()) != null) {

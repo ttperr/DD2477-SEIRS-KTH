@@ -166,6 +166,9 @@ public class Searcher {
         }
         for (int i = 0; i < N; i++) {
             if (scores[i] > 0) {
+                if (normType == NormalizationType.NUMBER_OF_WORDS) {
+                    scores[i] /= index.docLengths.get(i);
+                }
                 result.add(i, 0, scores[i]);
             }
         }
@@ -180,13 +183,7 @@ public class Searcher {
             for (int j = 0; j < postingsList.size(); j++) {
                 int docID = postingsList.get(j).docID;
                 int tf = postingsList.get(j).offsets.size();
-                double tfidf = tf * idf;
-                if (normType == NormalizationType.NUMBER_OF_WORDS) {
-                    tfidf /= index.docLengths.get(docID);
-                } if (normType == NormalizationType.EUCLIDEAN) {
-                    //tfidf /= Math.sqrt(index.docLengths.get(docID));
-                }
-                scores[docID] += tfidf;
+                scores[docID] += tf * idf;
             }
         }
     }
