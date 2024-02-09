@@ -90,6 +90,9 @@ public class Indexer {
                         index.docNames.put(docID, f.getPath());
                         index.docLengths.put(docID, offset);
                         reader.close();
+
+                        index.putDocEuclideanLength(docID);
+
                     } catch (IOException e) {
                         System.err.println("Warning: IOException during indexing.");
                     }

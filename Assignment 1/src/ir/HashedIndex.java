@@ -64,4 +64,17 @@ public class HashedIndex implements Index {
      */
     public void cleanup() {
     }
+
+    @Override
+    public void putDocEuclideanLength(int docID) {
+        System.err.println("Error in hashed index, use persistent index.");
+        System.exit(1);
+    }
+
+    @Override
+    public double getEuclideanLength(int docID) {
+        System.err.println("Error in hashed index, use persistent index.");
+        System.exit(1);
+        return 0;
+    }
 }

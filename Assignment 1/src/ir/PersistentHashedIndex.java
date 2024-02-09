@@ -30,6 +30,8 @@ public class PersistentHashedIndex implements Index {
      */
     public static final String INDEX_DIR = "../../indexDavis"; // TODO: Change this to the path of the index directory
 
+    public static final String EUCLIDEAN_LENGTHS = "euclideanLengths";
+
     /**
      * The dictionary file name
      */
@@ -382,5 +384,43 @@ public class PersistentHashedIndex implements Index {
         long elapsedTime = System.currentTimeMillis() - time;
         System.err.println("done!");
         System.err.println("Writing took: " + elapsedTime / 1000F + "s");
+    }
+
+    @Override
+    public void putDocEuclideanLength(int docID) {
+        int length = 0;
+        for (Map.Entry<String, PostingsList> entry : index.entrySet()) {
+            PostingsList postingsList = entry.getValue();
+            for (int i = 0; i < postingsList.size(); i++) {
+                if (postingsList.get(i).docID == docID) {
+                    length += (postingsList.get(i).offsets.size())*(postingsList.get(i).offsets.size());
+                }
+            }
+        }
+        try {
+            BufferedWriter writer = new BufferedWriter(new FileWriter(INDEX_DIR + "/" + EUCLIDEAN_LENGTHS, true));
+            writer.write(docID + ";" + Math.sqrt(length) + "\n");
+            writer.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public double getEuclideanLength(int docID) {
+        try {
+            File file = new File(INDEX_DIR + "/" + EUCLIDEAN_LENGTHS);
+            BufferedReader br = new BufferedReader(new FileReader(file));
+            String line;
+            while ((line = br.readLine()) != null) {
+                String[] data = line.split(";");
+                if (Integer.parseInt(data[0]) == docID) {
+                    return Double.parseDouble(data[1]);
+                }
+            }
+            br.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return 0;
     }
 }

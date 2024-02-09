@@ -168,6 +168,8 @@ public class Searcher {
             if (scores[i] > 0) {
                 if (normType == NormalizationType.NUMBER_OF_WORDS) {
                     scores[i] /= index.docLengths.get(i);
+                } else if (normType == NormalizationType.EUCLIDEAN) {
+                    scores[i] /= getEuclideanLength(i);
                 }
                 result.add(i, 0, scores[i]);
             }
@@ -226,6 +228,10 @@ public class Searcher {
             if (scores[i] > 0) {
                 if (normType == NormalizationType.NUMBER_OF_WORDS) {
                     tfidf.add(new PostingsEntry(i, 0, scores[i] / index.docLengths.get(i)));
+                } else if (normType == NormalizationType.EUCLIDEAN) {
+                    tfidf.add(new PostingsEntry(i, 0, scores[i] / getEuclideanLength(i)));
+                } else {
+                    tfidf.add(new PostingsEntry(i, 0, scores[i]));
                 }
             }
         }
@@ -237,5 +243,9 @@ public class Searcher {
         }
         result.sort();
         return result;
+    }
+
+    private double getEuclideanLength(int docID) {
+        return index.getEuclideanLength(docID);
     }
 }
