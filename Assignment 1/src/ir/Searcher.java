@@ -179,7 +179,7 @@ public class Searcher {
     private void computeTFIDF(Query query, NormalizationType normType, int i, int N, double[] scores) {
         PostingsList postingsList = index.getPostings(query.queryterm.get(i).term);
         if (postingsList != null) {
-            double idf = Math.log((double)N / postingsList.size());
+            double idf = Math.log((double) N / postingsList.size());
             for (int j = 0; j < postingsList.size(); j++) {
                 int docID = postingsList.get(j).docID;
                 int tf = postingsList.get(j).offsets.size();

@@ -73,8 +73,6 @@ public class PageRank {
     public PageRank(String filename) {
         int noOfDocs = readDocs(filename);
         iterate(noOfDocs, 1000);
-        String testName = "JasonRifkind.f";
-        // System.out.println(docNumberMap.get(testName) + " : " + scores[docNumberMap.get(testName)]);
     }
 
 
