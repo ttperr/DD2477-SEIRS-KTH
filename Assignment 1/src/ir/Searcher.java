@@ -162,7 +162,7 @@ public class Searcher {
         double[] scores = new double[N];
         PostingsList result = new PostingsList();
         for (int i = 0; i < query.queryterm.size(); i++) {
-            computeTFIDF(query, normType, i, N, scores);
+            computeTFIDF(query, i, N, scores);
         }
         for (int i = 0; i < N; i++) {
             if (scores[i] > 0) {
@@ -176,7 +176,7 @@ public class Searcher {
         return result;
     }
 
-    private void computeTFIDF(Query query, NormalizationType normType, int i, int N, double[] scores) {
+    private void computeTFIDF(Query query, int i, int N, double[] scores) {
         PostingsList postingsList = index.getPostings(query.queryterm.get(i).term);
         if (postingsList != null) {
             double idf = Math.log((double) N / postingsList.size());
@@ -219,13 +219,13 @@ public class Searcher {
         PostingsList result = new PostingsList();
         double[] scores = new double[index.docLengths.size()];
         for (int i = 0; i < query.queryterm.size(); i++) {
-            computeTFIDF(query, normType, i, index.docLengths.size(), scores);
+            computeTFIDF(query, i, index.docLengths.size(), scores);
         }
         ArrayList<PostingsEntry> tfidf = new ArrayList<>();
         for (int i = 0; i < scores.length; i++) {
             if (scores[i] > 0) {
                 if (normType == NormalizationType.NUMBER_OF_WORDS) {
-                    tfidf.add(new PostingsEntry(i, 0, scores[i]/index.docLengths.get(i)));
+                    tfidf.add(new PostingsEntry(i, 0, scores[i] / index.docLengths.get(i)));
                 }
             }
         }
