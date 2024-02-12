@@ -260,10 +260,6 @@ public class PageRank {
         return docTitle;
     }
 
-    public double getScore(int docID) {
-        return scores[docID];
-    }
-
     public double getScore(String docName) {
         String fileName = docName.lastIndexOf("/") > 0 ? docName.substring(docName.lastIndexOf("/") + 1) : docName;
         return scores[docNumberMap.get(fileName)];
