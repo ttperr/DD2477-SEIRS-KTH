@@ -43,7 +43,7 @@ public class TokenTest {
                     Reader reader = new InputStreamReader( new FileInputStream(f), StandardCharsets.UTF_8 );
                     Tokenizer tok = new Tokenizer( reader, case_folding, remove_diacritics, remove_punctuation, patternsfile );
                     int offset = 0;
-                    PrintStream out = new PrintStream( System.out, true, "UTF-8" );
+                    PrintStream out = new PrintStream( System.out, true, StandardCharsets.UTF_8);
                     while ( tok.hasMoreTokens() ) { 
                         out.println( tok.nextToken() );
                     }

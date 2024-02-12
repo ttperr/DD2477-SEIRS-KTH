@@ -55,7 +55,7 @@ public class Engine {
     /**
      * Directories that should be indexed.
      */
-    ArrayList<String> dirNames = new ArrayList<String>();
+    ArrayList<String> dirNames = new ArrayList<>();
 
     /**
      * Lock to prevent simultaneous access to the index.

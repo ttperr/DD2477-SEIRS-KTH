@@ -14,7 +14,7 @@ public class PostingsList {
     /**
      * The postings list
      */
-    private ArrayList<PostingsEntry> list = new ArrayList<PostingsEntry>();
+    private final ArrayList<PostingsEntry> list = new ArrayList<>();
 
 
     /**

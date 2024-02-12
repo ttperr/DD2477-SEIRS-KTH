@@ -66,7 +66,7 @@ public class Tokenizer {
     int token_start = -1;
 
     /** The next tokens to emit. */
-    ArrayList<String> token_queue = new ArrayList<String>();
+    ArrayList<String> token_queue = new ArrayList<>();
 
     /** @code{true} if we've started reading tokens. */
     boolean started_reading = false;
@@ -125,7 +125,7 @@ public class Tokenizer {
      *  Read the patterns that match non-standard words  
      */
     private void readPatterns( String filename ) {
-        patterns = new ArrayList<Pattern>();
+        patterns = new ArrayList<>();
         String line = null;
         try {
             BufferedReader in = new BufferedReader( new FileReader( filename ));
@@ -200,12 +200,12 @@ public class Tokenizer {
     public String nextToken() throws IOException { 
         if ( token_queue.size() == 0 ) {
             if ( readTokens() )
-                return token_queue.remove( 0 );
+                return token_queue.removeFirst();
             else
                 return null;
         }
         else {
-            return token_queue.remove( 0 );
+            return token_queue.removeFirst();
         }
     }
 

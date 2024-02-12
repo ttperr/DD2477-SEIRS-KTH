@@ -18,7 +18,7 @@ public class PageRank {
     /**
      * Mapping from document names to document numbers.
      */
-    HashMap<String, Integer> docNumber = new HashMap<String, Integer>();
+    HashMap<String, Integer> docNumber = new HashMap<>();
 
     /**
      * Mapping from document numbers to document names
@@ -36,7 +36,7 @@ public class PageRank {
      * If there are no outlinks from i, then the value corresponding
      * key i is null.
      */
-    HashMap<Integer, HashMap<Integer, Boolean>> link = new HashMap<Integer, HashMap<Integer, Boolean>>();
+    HashMap<Integer, HashMap<Integer, Boolean>> link = new HashMap<>();
 
     /**
      * The number of outlinks from each node.
@@ -115,7 +115,7 @@ public class PageRank {
                     // Set the probability to 0 for now, to indicate that there is
                     // a link from from_doc to otherDoc.
                     if (link.get(from_doc) == null) {
-                        link.put(from_doc, new HashMap<Integer, Boolean>());
+                        link.put(from_doc, new HashMap<>());
                     }
                     if (link.get(from_doc).get(otherDoc) == null) {
                         link.get(from_doc).put(otherDoc, true);
@@ -225,9 +225,9 @@ public class PageRank {
         // Write in the file
         try {
             BufferedWriter writer = new BufferedWriter(new FileWriter(TOP_30_TEST_TXT));
-            for (int i = 0; i < resultList.size(); i++) {
-                writer.write(docName[resultList.get(i)] + ": " + scores[resultList.get(i)] + ": " +
-                        DATA_WIKI + docTitle[resultList.get(i)] + "\n");
+            for (Integer integer : resultList) {
+                writer.write(docName[integer] + ": " + scores[integer] + ": " +
+                        DATA_WIKI + docTitle[integer] + "\n");
             }
             writer.close();
         } catch (IOException e) {

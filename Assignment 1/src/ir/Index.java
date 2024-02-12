@@ -18,12 +18,12 @@ public interface Index {
     /**
      * Mapping from document identifiers to document names.
      */
-    HashMap<Integer, String> docNames = new HashMap<Integer, String>();
+    HashMap<Integer, String> docNames = new HashMap<>();
 
     /**
      * Mapping from document identifier to document length.
      */
-    HashMap<Integer, Integer> docLengths = new HashMap<Integer, Integer>();
+    HashMap<Integer, Integer> docLengths = new HashMap<>();
 
     /**
      * Inserts a token into the index.

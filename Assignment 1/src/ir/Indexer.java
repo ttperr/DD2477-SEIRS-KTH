@@ -72,7 +72,7 @@ public class Indexer {
                     // an IO error could occur
                     if (fs != null) {
                         for (String s : fs) {
-                            processFiles(new File(f, s), is_indexing);
+                            processFiles(new File(f, s), true);
                         }
                     }
                 } else {

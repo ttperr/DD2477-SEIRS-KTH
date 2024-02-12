@@ -15,13 +15,13 @@ import java.nio.charset.StandardCharsets;
 public class KGramIndex {
 
     /** Mapping from term ids to actual term strings */
-    HashMap<Integer,String> id2term = new HashMap<Integer,String>();
+    HashMap<Integer,String> id2term = new HashMap<>();
 
     /** Mapping from term strings to term ids */
-    HashMap<String,Integer> term2id = new HashMap<String,Integer>();
+    HashMap<String,Integer> term2id = new HashMap<>();
 
     /** Index from k-grams to list of term ids that contain the k-gram */
-    HashMap<String,List<KGramPostingsEntry>> index = new HashMap<String,List<KGramPostingsEntry>>();
+    HashMap<String,List<KGramPostingsEntry>> index = new HashMap<>();
 
     /** The ID of the last processed term */
     int lastTermID = -1;
@@ -84,7 +84,7 @@ public class KGramIndex {
     }
 
     private static HashMap<String,String> decodeArgs( String[] args ) {
-        HashMap<String,String> decodedArgs = new HashMap<String,String>();
+        HashMap<String,String> decodedArgs = new HashMap<>();
         int i=0, j=0;
         while ( i < args.length ) {
             if ( "-p".equals( args[i] )) {

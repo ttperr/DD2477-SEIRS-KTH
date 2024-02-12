@@ -75,7 +75,7 @@ public class PersistentHashedIndex implements Index {
     /**
      * The cache as a main-memory hash map.
      */
-    HashMap<String, PostingsList> index = new HashMap<String, PostingsList>();
+    HashMap<String, PostingsList> index = new HashMap<>();
 
 
     // ===================================================================
@@ -87,9 +87,9 @@ public class PersistentHashedIndex implements Index {
         //
         //  YOUR CODE HERE
         //
-        private long ptr;
-        private int size;
-        private long hash;
+        private final long ptr;
+        private final int size;
+        private final long hash;
         public static final int BYTES = 2 * Long.BYTES + Integer.BYTES;
 
         public Entry(long ptr, int size, long hash) {

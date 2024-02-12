@@ -404,7 +404,7 @@ public class SearchGUI extends JFrame {
         }
         revalidate();
         repaint();
-    };
+    }
 
 
     /**

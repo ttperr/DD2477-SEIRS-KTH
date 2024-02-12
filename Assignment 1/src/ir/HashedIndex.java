@@ -9,7 +9,6 @@
 package ir;
 
 import java.util.HashMap;
-import java.util.Iterator;
 
 
 /**
@@ -21,7 +20,7 @@ public class HashedIndex implements Index {
     /**
      * The index as a hashtable.
      */
-    private HashMap<String, PostingsList> index = new HashMap<String, PostingsList>();
+    private final HashMap<String, PostingsList> index = new HashMap<>();
 
 
     /**

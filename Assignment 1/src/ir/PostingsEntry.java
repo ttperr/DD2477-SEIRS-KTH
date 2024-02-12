@@ -15,7 +15,7 @@ import java.io.Serializable;
 
 public class PostingsEntry implements Comparable<PostingsEntry>, Serializable {
 
-    public int docID;
+    public final int docID;
     public double score = 0;
 
     /**
@@ -33,7 +33,7 @@ public class PostingsEntry implements Comparable<PostingsEntry>, Serializable {
     //
     // YOUR CODE HERE
     //
-    public ArrayList<Integer> offsets = new ArrayList<Integer>();
+    public ArrayList<Integer> offsets = new ArrayList<>();
 
     public PostingsEntry(int docID, int offset, double score) {
         this.docID = docID;
