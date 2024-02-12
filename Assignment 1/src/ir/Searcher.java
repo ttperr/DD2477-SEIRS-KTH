@@ -10,6 +10,7 @@ package ir;
 import pagerank.PageRank;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 /**
  * Searches an index for results of a query.
@@ -31,6 +32,8 @@ public class Searcher {
      */
     PageRank pageRank;
 
+    final HashMap<Integer, Double> euclideanLengths = new HashMap<>();
+
     final double TFIDF_WEIGHT = 1;
     final double PR_WEIGHT = 750;
 
@@ -41,6 +44,8 @@ public class Searcher {
         this.index = index;
         this.kgIndex = kgIndex;
         pageRank = new PageRank("../../Assignment 2/src/pagerank/linksDavis.txt");
+        index.readEuclideanLengths(euclideanLengths);
+        System.err.println("Ready to receive queries!");
     }
 
     /**
@@ -169,7 +174,7 @@ public class Searcher {
                 if (normType == NormalizationType.NUMBER_OF_WORDS) {
                     scores[i] /= index.docLengths.get(i);
                 } else if (normType == NormalizationType.EUCLIDEAN) {
-                    scores[i] /= getEuclideanLength(i);
+                    scores[i] /= euclideanLengths.get(i);
                 }
                 result.add(i, 0, scores[i]);
             }
@@ -184,7 +189,7 @@ public class Searcher {
             double idf = Math.log((double) N / postingsList.size());
             for (int j = 0; j < postingsList.size(); j++) {
                 int docID = postingsList.get(j).docID;
-                int tf = postingsList.get(j).offsets.size();
+                double tf = postingsList.get(j).score;
                 scores[docID] += tf * idf;
             }
         }
@@ -229,7 +234,7 @@ public class Searcher {
                 if (normType == NormalizationType.NUMBER_OF_WORDS) {
                     tfidf.add(new PostingsEntry(i, 0, scores[i] / index.docLengths.get(i)));
                 } else if (normType == NormalizationType.EUCLIDEAN) {
-                    tfidf.add(new PostingsEntry(i, 0, scores[i] / getEuclideanLength(i)));
+                    tfidf.add(new PostingsEntry(i, 0, scores[i] / euclideanLengths.get(i)));
                 } else {
                     tfidf.add(new PostingsEntry(i, 0, scores[i]));
                 }
@@ -243,9 +248,5 @@ public class Searcher {
         }
         result.sort();
         return result;
-    }
-
-    private double getEuclideanLength(int docID) {
-        return index.getEuclideanLength(docID);
     }
 }

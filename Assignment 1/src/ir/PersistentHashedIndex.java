@@ -382,18 +382,28 @@ public class PersistentHashedIndex implements Index {
         long time = System.currentTimeMillis();
         writeIndex();
         long elapsedTime = System.currentTimeMillis() - time;
+        System.err.println("done! in " + elapsedTime / 1000F + "s. Printing euclidean lengths...");
+        for (int docID : docNames.keySet()) {
+            if (docID % 1000 == 0) {
+                System.err.println(docID);
+            }
+            putDocEuclideanLength(docID);
+        }
         System.err.println("done!");
-        System.err.println("Writing took: " + elapsedTime / 1000F + "s");
+        System.err.println("Writing took: " + (System.currentTimeMillis() - elapsedTime) / 1000F + "s");
     }
 
     @Override
     public void putDocEuclideanLength(int docID) {
         double length = 0;
+        int N = docNames.size();
         for (Map.Entry<String, PostingsList> entry : index.entrySet()) {
             PostingsList postingsList = entry.getValue();
+            double idf = Math.log(N / (double) postingsList.size());
             for (int i = 0; i < postingsList.size(); i++) {
                 if (postingsList.get(i).docID == docID) {
-                    length += Math.pow(postingsList.get(i).score, 2);
+                    double tf = postingsList.get(i).score;
+                    length += tf * idf * tf * idf;
                 }
             }
         }
@@ -422,5 +432,20 @@ public class PersistentHashedIndex implements Index {
             e.printStackTrace();
         }
         return 0;
+    }
+
+    public void readEuclideanLengths(HashMap<Integer, Double> euclideanLengths) {
+        try {
+            File file = new File(INDEX_DIR + "/" + EUCLIDEAN_LENGTHS);
+            BufferedReader br = new BufferedReader(new FileReader(file));
+            String line;
+            while ((line = br.readLine()) != null) {
+                String[] data = line.split(";");
+                euclideanLengths.put(Integer.parseInt(data[0]), Double.parseDouble(data[1]));
+            }
+            br.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }

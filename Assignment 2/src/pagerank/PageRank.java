@@ -147,7 +147,7 @@ public class PageRank {
      */
     void iterate(int numberOfDocs, int maxIterations) {
         // YOUR CODE HERE
-        System.err.println("Started Iteration...");
+        System.err.println("Started PageRank Iteration...");
         double startTime = System.currentTimeMillis();
         scores = new double[numberOfDocs];
         double[] newScores = new double[numberOfDocs];

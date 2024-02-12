@@ -77,4 +77,10 @@ public class HashedIndex implements Index {
         System.exit(1);
         return 0;
     }
+
+    @Override
+    public void readEuclideanLengths(HashMap<Integer, Double> euclideanLengths) {
+        System.err.println("Error in hashed index, use persistent index.");
+        System.exit(1);
+    }
 }
