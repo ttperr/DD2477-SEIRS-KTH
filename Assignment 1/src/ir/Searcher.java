@@ -32,7 +32,7 @@ public class Searcher {
      */
     PageRank pageRank;
 
-    final HashMap<Integer, Double> euclideanLengths = new HashMap<>();
+    static final HashMap<Integer, Double> euclideanLengths = new HashMap<>();
 
     final double TFIDF_WEIGHT = 1;
     final double PR_WEIGHT = 750;

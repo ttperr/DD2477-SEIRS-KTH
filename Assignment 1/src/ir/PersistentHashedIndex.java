@@ -381,16 +381,19 @@ public class PersistentHashedIndex implements Index {
         System.err.print("Writing index to disk...");
         long time = System.currentTimeMillis();
         writeIndex();
-        long elapsedTime = System.currentTimeMillis() - time;
-        System.err.println("done! in " + elapsedTime / 1000F + "s. Printing euclidean lengths...");
+        long indexTime = System.currentTimeMillis();
+        long elapsedTime = indexTime - time;
+        System.err.println("done! in " + elapsedTime / 1000F + "s. Writing Euclidean lengths...");
         for (int docID : docNames.keySet()) {
             if (docID % 1000 == 0) {
-                System.err.println(docID);
+                System.err.println("Writing Euclidean lengths for docID: " + docID);
             }
             putDocEuclideanLength(docID);
         }
+        readEuclideanLengths(Searcher.euclideanLengths);
         System.err.println("done!");
-        System.err.println("Writing took: " + (System.currentTimeMillis() - elapsedTime) / 1000F + "s");
+        elapsedTime = System.currentTimeMillis() - indexTime;
+        System.err.println("Writing Euclidean lengths took " + elapsedTime / 60000 + " minutes");
     }
 
     @Override
@@ -445,7 +448,7 @@ public class PersistentHashedIndex implements Index {
             }
             br.close();
         } catch (IOException e) {
-            e.printStackTrace();
+            System.err.println("No Euclidean lengths file found. Will calculate them...");
         }
     }
 }
