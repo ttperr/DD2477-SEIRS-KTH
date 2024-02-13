@@ -274,6 +274,7 @@ public class PageRank {
             randomDoc = random.nextInt(numberOfDocs);
             while (Math.random() > BORED) {
                 Set<Integer> outlinks = link.get(randomDoc).keySet();
+                if (outlinks.isEmpty()) break;
                 randomDoc = (int) outlinks.toArray()[(int) (Math.random() * outlinks.size())];
             }
             estimatedScores[randomDoc]++;
@@ -292,6 +293,7 @@ public class PageRank {
                 int randomDoc = i;
                 while (Math.random() > BORED) {
                     Set<Integer> outlinks = link.get(randomDoc).keySet();
+                    if (outlinks.isEmpty()) break;
                     randomDoc = (int) outlinks.toArray()[(int) (Math.random() * outlinks.size())];
                 }
                 estimatedScores[randomDoc]++;
@@ -301,6 +303,10 @@ public class PageRank {
             estimatedScores[i] /= numberOfRuns;
         }
         return estimatedScores;
+    }
+
+    private double[] mcCompletePathStop(int numberOfDocs, int numberOfRuns, int danglingNode) {
+        return null;
     }
 
     /* --------------------------------------------- */
