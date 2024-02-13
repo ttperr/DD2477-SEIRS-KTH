@@ -265,14 +265,13 @@ public class PageRank {
         return scores[docNumberMap.get(fileName)];
     }
 
-    private void mcEndPointRandomStart(int numberOfDocs, int numberOfRuns) {
+    private double[] mcEndPointRandomStart(int numberOfDocs, int numberOfRuns) {
         scores = new double[numberOfDocs];
         int randomDoc;
         for (int i = 0; i < numberOfRuns; i++) {
             Random random = new Random();
             randomDoc = random.nextInt(numberOfDocs);
             while (Math.random() > BORED) {
-                // Get a random outlink
                 Set<Integer> outlinks = link.get(randomDoc).keySet();
                 randomDoc = (int) outlinks.toArray()[(int) (Math.random() * outlinks.size())];
             }
@@ -281,6 +280,24 @@ public class PageRank {
         for (int i = 0; i < numberOfDocs; i++) {
             scores[i] /= numberOfRuns;
         }
+    }
+
+    private double[] mcEndPointCyclicStart(int numberOfDocs, int numberOfRuns) {
+        int m = numberOfRuns / numberOfDocs;
+        for (int i = 0; i < numberOfDocs; i++) {
+            for (int j = 0; j < m; j++) {
+                int randomDoc = i;
+                while (Math.random() > BORED) {
+                    Set<Integer> outlinks = link.get(randomDoc).keySet();
+                    randomDoc = (int) outlinks.toArray()[(int) (Math.random() * outlinks.size())];
+                }
+                scores[randomDoc]++;
+            }
+        }
+        for (int i = 0; i < numberOfDocs; i++) {
+            scores[i] /= numberOfRuns;
+        }
+        return scores;
     }
 
     /* --------------------------------------------- */
