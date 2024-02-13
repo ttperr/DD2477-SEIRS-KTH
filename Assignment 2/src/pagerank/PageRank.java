@@ -186,7 +186,7 @@ public class PageRank {
                 break;
             }
         }
-        printPageRank(newScores, true);
+        printPageRank(newScores, TOP_30_TEST_TXT, true);
         double estimatedTime = (System.currentTimeMillis() - startTime) / 1000.0;
         System.err.println("PageRank done! Time: " + estimatedTime + "s");
     }
@@ -200,9 +200,8 @@ public class PageRank {
         return true;
     }
 
-    private void printPageRank(double[] scores, boolean top30) {
+    private void printPageRank(double[] scores, String filename, boolean top30) {
         int numberOfDocs = scores.length;
-        // Insert into davis_top_30_test.txt the 30 most important pages
         List<Integer> resultList = new ArrayList<>();
         if (top30) {
             for (int i = 0; i < 30; i++) {
@@ -224,7 +223,7 @@ public class PageRank {
         }
         // Write in the file
         try {
-            BufferedWriter writer = new BufferedWriter(new FileWriter(TOP_30_TEST_TXT));
+            BufferedWriter writer = new BufferedWriter(new FileWriter(filename));
             for (Integer integer : resultList) {
                 writer.write(docName[integer] + ": " + scores[integer] + ": " +
                         DATA_WIKI + docTitle[integer] + "\n");
@@ -267,7 +266,6 @@ public class PageRank {
 
     private double[] mcEndPointRandomStart(int numberOfDocs, int numberOfRuns) {
         double[] estimatedScores = new double[numberOfDocs];
-        estimatedScores = new double[numberOfDocs];
         int randomDoc;
         for (int i = 0; i < numberOfRuns; i++) {
             Random random = new Random();
@@ -305,8 +303,47 @@ public class PageRank {
         return estimatedScores;
     }
 
-    private double[] mcCompletePathStop(int numberOfDocs, int numberOfRuns, int danglingNode) {
-        return null;
+    private double[] mcCompletePathStop(int numberOfDocs, int numberOfRuns) {
+        int m = numberOfRuns / numberOfDocs;
+        double[] estimatedScores = new double[numberOfDocs];
+        int visits = 0;
+        for (int i = 0; i < numberOfDocs; i++) {
+            for (int j = 0; j < m; j++) {
+                int randomDoc = i;
+                while (Math.random() > BORED) {
+                    estimatedScores[randomDoc]++;
+                    visits++;
+                    Set<Integer> outlinks = link.get(randomDoc).keySet();
+                    if (outlinks.isEmpty()) break;
+                    randomDoc = (int) outlinks.toArray()[(int) (Math.random() * outlinks.size())];
+                }
+            }
+        }
+        for (int i = 0; i < numberOfDocs; i++) {
+            estimatedScores[i] /= visits;
+        }
+        return estimatedScores;
+    }
+
+    private double[] mcCompletePathStopRandomStart(int numberOfDocs, int numberOfRuns) {
+        double[] estimatedScores = new double[numberOfDocs];
+        int randomDoc;
+        int visits = 0;
+        for (int i = 0; i < numberOfRuns; i++) {
+            Random random = new Random();
+            randomDoc = random.nextInt(numberOfDocs);
+            while (Math.random() > BORED) {
+                estimatedScores[randomDoc]++;
+                visits++;
+                Set<Integer> outlinks = link.get(randomDoc).keySet();
+                if (outlinks.isEmpty()) break;
+                randomDoc = (int) outlinks.toArray()[(int) (Math.random() * outlinks.size())];
+            }
+        }
+        for (int i = 0; i < numberOfDocs; i++) {
+            estimatedScores[i] /= visits;
+        }
+        return estimatedScores;
     }
 
     /* --------------------------------------------- */
