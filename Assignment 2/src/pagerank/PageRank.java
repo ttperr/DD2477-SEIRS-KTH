@@ -266,7 +266,8 @@ public class PageRank {
     }
 
     private double[] mcEndPointRandomStart(int numberOfDocs, int numberOfRuns) {
-        scores = new double[numberOfDocs];
+        double[] estimatedScores = new double[numberOfDocs];
+        estimatedScores = new double[numberOfDocs];
         int randomDoc;
         for (int i = 0; i < numberOfRuns; i++) {
             Random random = new Random();
@@ -275,15 +276,17 @@ public class PageRank {
                 Set<Integer> outlinks = link.get(randomDoc).keySet();
                 randomDoc = (int) outlinks.toArray()[(int) (Math.random() * outlinks.size())];
             }
-            scores[randomDoc]++;
+            estimatedScores[randomDoc]++;
         }
         for (int i = 0; i < numberOfDocs; i++) {
-            scores[i] /= numberOfRuns;
+            estimatedScores[i] /= numberOfRuns;
         }
+        return estimatedScores;
     }
 
     private double[] mcEndPointCyclicStart(int numberOfDocs, int numberOfRuns) {
         int m = numberOfRuns / numberOfDocs;
+        double[] estimatedScores = new double[numberOfDocs];
         for (int i = 0; i < numberOfDocs; i++) {
             for (int j = 0; j < m; j++) {
                 int randomDoc = i;
@@ -291,13 +294,13 @@ public class PageRank {
                     Set<Integer> outlinks = link.get(randomDoc).keySet();
                     randomDoc = (int) outlinks.toArray()[(int) (Math.random() * outlinks.size())];
                 }
-                scores[randomDoc]++;
+                estimatedScores[randomDoc]++;
             }
         }
         for (int i = 0; i < numberOfDocs; i++) {
-            scores[i] /= numberOfRuns;
+            estimatedScores[i] /= numberOfRuns;
         }
-        return scores;
+        return estimatedScores;
     }
 
     /* --------------------------------------------- */
