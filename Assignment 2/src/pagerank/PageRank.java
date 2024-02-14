@@ -13,6 +13,7 @@ public class PageRank {
 
     public static final String TITLES_TXT = "/Users/ttperr/Documents/Git/Pro/3A/DD2477-SEIRS-KTH/Assignment 2/src/pagerank/davisTitles.txt";
     public static final String TOP_30_TEST_TXT = "/Users/ttperr/Documents/Git/Pro/3A/DD2477-SEIRS-KTH/Assignment 2/src/pagerank/davis_top_30_test.txt";
+    public static final String TOP_30 = "/Users/ttperr/Documents/Git/Pro/3A/DD2477-SEIRS-KTH/Assignment 2/src/pagerank/davis_top_30.txt";
     public static final String DATA_WIKI = "../../data/davisWiki/";
 
     /**
@@ -73,6 +74,57 @@ public class PageRank {
     public PageRank(String filename) {
         int noOfDocs = readDocs(filename);
         iterate(noOfDocs, 1000);
+    }
+
+    public PageRank(String filename, int numberOfRuns) {
+        int noOfDocs = readDocs(filename);
+        docTitle = readTitles();
+
+        HashMap<Integer, Double> top30scores = readScores(TOP_30);
+
+        System.out.println("MC End Point Random Start");
+        double startTime = System.currentTimeMillis();
+        double[] scores = mcEndPointRandomStart(noOfDocs, numberOfRuns);
+        printPageRank(scores, "src/pagerank/mcEndPointRandomStart.txt", true);
+        double endTime = System.currentTimeMillis();
+        System.out.println("Time: " + (endTime - startTime) / 1000.0 + "s");
+
+        HashMap<Integer, Double> top30scoresMC = readScores("src/pagerank/mcEndPointRandomStart.txt");
+        double loss = computeLoss(top30scores, top30scoresMC);
+        System.out.println("Loss: " + loss);
+
+        System.out.println("MC End Point Cyclic Start");
+        startTime = System.currentTimeMillis();
+        scores = mcEndPointCyclicStart(noOfDocs, numberOfRuns);
+        printPageRank(scores, "src/pagerank/mcEndPointCyclicStart.txt", true);
+        endTime = System.currentTimeMillis();
+        System.out.println("Time: " + (endTime - startTime) / 1000.0 + "s");
+
+        top30scoresMC = readScores("src/pagerank/mcEndPointCyclicStart.txt");
+        loss = computeLoss(top30scores, top30scoresMC);
+        System.out.println("Loss: " + loss);
+
+        System.out.println("MC Complete Path Stop");
+        startTime = System.currentTimeMillis();
+        scores = mcCompletePathStop(noOfDocs, numberOfRuns);
+        printPageRank(scores, "src/pagerank/mcCompletePathStop.txt", true);
+        endTime = System.currentTimeMillis();
+        System.out.println("Time: " + (endTime - startTime) / 1000.0 + "s");
+
+        top30scoresMC = readScores("src/pagerank/mcCompletePathStop.txt");
+        loss = computeLoss(top30scores, top30scoresMC);
+        System.out.println("Loss: " + loss);
+
+        System.out.println("MC Complete Path Stop Random Start");
+        startTime = System.currentTimeMillis();
+        scores = mcCompletePathStopRandomStart(noOfDocs, numberOfRuns);
+        printPageRank(scores, "src/pagerank/mcCompletePathStopRandomStart.txt", true);
+        endTime = System.currentTimeMillis();
+        System.out.println("Time: " + (endTime - startTime) / 1000.0 + "s");
+
+        top30scoresMC = readScores("src/pagerank/mcCompletePathStopRandomStart.txt");
+        loss = computeLoss(top30scores, top30scoresMC);
+        System.out.println("Loss: " + loss);
     }
 
 
@@ -200,7 +252,7 @@ public class PageRank {
         return true;
     }
 
-    private void printPageRank(double[] scores, String filename, boolean top30) {
+    void printPageRank(double[] scores, String filename, boolean top30) {
         int numberOfDocs = scores.length;
         List<Integer> resultList = new ArrayList<>();
         if (top30) {
@@ -234,7 +286,7 @@ public class PageRank {
         }
     }
 
-    private String[] readTitles() {
+    String[] readTitles() {
         String[] docTitle = new String[MAX_NUMBER_OF_DOCS];
         try {
             BufferedReader reader = new BufferedReader(new FileReader(TITLES_TXT));
@@ -243,7 +295,7 @@ public class PageRank {
             while ((line = reader.readLine()) != null) {
                 docID = Integer.parseInt(line.split(";")[0]);
                 int indexOfDocID = -1;
-                for (int i = 0; i < scores.length; i++) {
+                for (int i = 0; i < docName.length; i++) {
                     if (Integer.parseInt(docName[i]) == docID) {
                         indexOfDocID = i;
                         break;
@@ -264,15 +316,35 @@ public class PageRank {
         return scores[docNumberMap.get(fileName)];
     }
 
+    private HashMap<Integer, Double> readScores(String filename) {
+        HashMap<Integer, Double> readScores = new HashMap<>();
+        try {
+            BufferedReader reader = new BufferedReader(new FileReader(filename));
+            String line;
+            while ((line = reader.readLine()) != null) {
+                String[] split = line.split(": ");
+                readScores.put(Integer.parseInt(split[0]), Double.parseDouble(split[1]));
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return readScores;
+    }
+
     private double[] mcEndPointRandomStart(int numberOfDocs, int numberOfRuns) {
         double[] estimatedScores = new double[numberOfDocs];
         int randomDoc;
+        Set<Integer> outlinks;
+        Random random = new Random();
         for (int i = 0; i < numberOfRuns; i++) {
-            Random random = new Random();
             randomDoc = random.nextInt(numberOfDocs);
             while (Math.random() > BORED) {
-                Set<Integer> outlinks = link.get(randomDoc).keySet();
-                if (outlinks.isEmpty()) break;
+                try {
+                    outlinks = link.get(randomDoc).keySet();
+                } catch (NullPointerException e) {
+                    randomDoc = random.nextInt(numberOfDocs);
+                    continue;
+                }
                 randomDoc = (int) outlinks.toArray()[(int) (Math.random() * outlinks.size())];
             }
             estimatedScores[randomDoc]++;
@@ -286,12 +358,17 @@ public class PageRank {
     private double[] mcEndPointCyclicStart(int numberOfDocs, int numberOfRuns) {
         int m = numberOfRuns / numberOfDocs;
         double[] estimatedScores = new double[numberOfDocs];
+        Set<Integer> outlinks;
         for (int i = 0; i < numberOfDocs; i++) {
             for (int j = 0; j < m; j++) {
                 int randomDoc = i;
                 while (Math.random() > BORED) {
-                    Set<Integer> outlinks = link.get(randomDoc).keySet();
-                    if (outlinks.isEmpty()) break;
+                    try {
+                        outlinks = link.get(randomDoc).keySet();
+                    } catch (NullPointerException e) {
+                        randomDoc = (int) (Math.random() * numberOfDocs);
+                        continue;
+                    }
                     randomDoc = (int) outlinks.toArray()[(int) (Math.random() * outlinks.size())];
                 }
                 estimatedScores[randomDoc]++;
@@ -307,14 +384,18 @@ public class PageRank {
         int m = numberOfRuns / numberOfDocs;
         double[] estimatedScores = new double[numberOfDocs];
         int visits = 0;
+        Set<Integer> outlinks;
         for (int i = 0; i < numberOfDocs; i++) {
             for (int j = 0; j < m; j++) {
                 int randomDoc = i;
                 while (Math.random() > BORED) {
                     estimatedScores[randomDoc]++;
                     visits++;
-                    Set<Integer> outlinks = link.get(randomDoc).keySet();
-                    if (outlinks.isEmpty()) break;
+                    try {
+                        outlinks = link.get(randomDoc).keySet();
+                    } catch (NullPointerException e) {
+                        break;
+                    }
                     randomDoc = (int) outlinks.toArray()[(int) (Math.random() * outlinks.size())];
                 }
             }
@@ -329,14 +410,18 @@ public class PageRank {
         double[] estimatedScores = new double[numberOfDocs];
         int randomDoc;
         int visits = 0;
+        Set<Integer> outlinks;
+        Random random = new Random();
         for (int i = 0; i < numberOfRuns; i++) {
-            Random random = new Random();
             randomDoc = random.nextInt(numberOfDocs);
             while (Math.random() > BORED) {
                 estimatedScores[randomDoc]++;
                 visits++;
-                Set<Integer> outlinks = link.get(randomDoc).keySet();
-                if (outlinks.isEmpty()) break;
+                try {
+                    outlinks = link.get(randomDoc).keySet();
+                } catch (NullPointerException e) {
+                    break;
+                }
                 randomDoc = (int) outlinks.toArray()[(int) (Math.random() * outlinks.size())];
             }
         }
@@ -346,6 +431,16 @@ public class PageRank {
         return estimatedScores;
     }
 
+    private double computeLoss(HashMap<Integer, Double> scores, HashMap<Integer, Double> top30scores) {
+        double loss = 0;
+        for (Integer integer : top30scores.keySet()) {
+            if (scores.containsKey(integer)) {
+                loss += Math.pow(scores.get(integer) - top30scores.get(integer), 2);
+            }
+        }
+        return loss;
+    }
+
     /* --------------------------------------------- */
 
 
@@ -353,7 +448,7 @@ public class PageRank {
         if (args.length != 1) {
             System.err.println("Please give the name of the link file");
         } else {
-            new PageRank(args[0]);
+            new PageRank(args[0], 17478 * 100);
         }
     }
 }
