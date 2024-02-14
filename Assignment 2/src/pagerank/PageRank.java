@@ -16,8 +16,8 @@ public class PageRank {
     public static final String TOP_30 = "/Users/ttperr/Documents/Git/Pro/3A/DD2477-SEIRS-KTH/Assignment 2/src/pagerank/davis_top_30.txt";
     public static final String DATA_WIKI = "../../data/davisWiki/";
 
-    public static final String SVWIKI = "/Users/ttperr/Documents/Git/Pro/3A/DD2477-SEIRS-KTH/Assignment 2/src/pagerank/linksSvwiki.txt";
-    public static final String SVWIKI_TITLES = "/Users/ttperr/Documents/Git/Pro/3A/DD2477-SEIRS-KTH/Assignment 2/src/pagerank/svwikiTitles.txt";
+    public static final String SV_WIKI = "/Users/ttperr/Documents/Git/Pro/3A/DD2477-SEIRS-KTH/Assignment 2/src/pagerank/linksSvwiki.txt";
+    public static final String SV_WIKI_TITLES = "/Users/ttperr/Documents/Git/Pro/3A/DD2477-SEIRS-KTH/Assignment 2/src/pagerank/svwikiTitles.txt";
 
     /**
      * Mapping from document names to document numbers.
@@ -87,8 +87,8 @@ public class PageRank {
 
         System.out.println("MC End Point Random Start");
         double startTime = System.currentTimeMillis();
-        double[] scores = mcEndPointRandomStart(noOfDocs, numberOfRuns);
-        printPageRank(scores, "src/pagerank/mcEndPointRandomStart.txt", true, true);
+        double[] mcScores = mcEndPointRandomStart(noOfDocs, numberOfRuns);
+        printPageRank(mcScores, "src/pagerank/mcEndPointRandomStart.txt", true, true);
         double endTime = System.currentTimeMillis();
         System.out.println("Time: " + (endTime - startTime) / 1000.0 + "s");
 
@@ -98,8 +98,8 @@ public class PageRank {
 
         System.out.println("MC End Point Cyclic Start");
         startTime = System.currentTimeMillis();
-        scores = mcEndPointCyclicStart(noOfDocs, numberOfRuns);
-        printPageRank(scores, "src/pagerank/mcEndPointCyclicStart.txt", true, true);
+        mcScores = mcEndPointCyclicStart(noOfDocs, numberOfRuns);
+        printPageRank(mcScores, "src/pagerank/mcEndPointCyclicStart.txt", true, true);
         endTime = System.currentTimeMillis();
         System.out.println("Time: " + (endTime - startTime) / 1000.0 + "s");
 
@@ -109,8 +109,8 @@ public class PageRank {
 
         System.out.println("MC Complete Path Stop");
         startTime = System.currentTimeMillis();
-        scores = mcCompletePathStop(noOfDocs, numberOfRuns);
-        printPageRank(scores, "src/pagerank/mcCompletePathStop.txt", true, true);
+        mcScores = mcCompletePathStop(noOfDocs, numberOfRuns);
+        printPageRank(mcScores, "src/pagerank/mcCompletePathStop.txt", true, true);
         endTime = System.currentTimeMillis();
         System.out.println("Time: " + (endTime - startTime) / 1000.0 + "s");
 
@@ -120,8 +120,8 @@ public class PageRank {
 
         System.out.println("MC Complete Path Stop Random Start");
         startTime = System.currentTimeMillis();
-        scores = mcCompletePathStopRandomStart(noOfDocs, numberOfRuns);
-        printPageRank(scores, "src/pagerank/mcCompletePathStopRandomStart.txt", true, true);
+        mcScores = mcCompletePathStopRandomStart(noOfDocs, numberOfRuns);
+        printPageRank(mcScores, "src/pagerank/mcCompletePathStopRandomStart.txt", true, true);
         endTime = System.currentTimeMillis();
         System.out.println("Time: " + (endTime - startTime) / 1000.0 + "s");
 
@@ -132,9 +132,9 @@ public class PageRank {
 
     public PageRank(String filename, boolean isWiki) {
         int noOfDocs = readDocs(filename);
-        double[] scores = mcCompletePathStop(noOfDocs, noOfDocs * 20);
+        scores = mcCompletePathStop(noOfDocs, noOfDocs * 20);
         printPageRank(scores, "src/pagerank/test_mc_wiki.text", true, false);
-        writeTitlesOnResult("src/pagerank/test_mc_wiki.text", SVWIKI_TITLES);
+        writeTitlesOnResult("src/pagerank/test_mc_wiki.text", SV_WIKI_TITLES);
     }
 
 
@@ -495,7 +495,7 @@ public class PageRank {
     public static void main(String[] args) {
         if (args.length != 1) {
             System.err.println("Please give the name of the link file");
-        } else if (args[0].equals(SVWIKI)) {
+        } else if (args[0].equals(SV_WIKI)) {
             new PageRank(args[0], true);
         } else {
             new PageRank(args[0], 17478 * 100);
