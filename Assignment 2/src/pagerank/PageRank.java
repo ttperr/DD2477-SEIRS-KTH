@@ -11,10 +11,13 @@ public class PageRank {
      */
     final static int MAX_NUMBER_OF_DOCS = 2000000;
 
-    public static final String TITLES_TXT = "/Users/ttperr/Documents/Git/Pro/3A/DD2477-SEIRS-KTH/Assignment 2/src/pagerank/davisTitles.txt";
+    public static final String DAVIS_TITLES_TXT = "/Users/ttperr/Documents/Git/Pro/3A/DD2477-SEIRS-KTH/Assignment 2/src/pagerank/davisTitles.txt";
     public static final String TOP_30_TEST_TXT = "/Users/ttperr/Documents/Git/Pro/3A/DD2477-SEIRS-KTH/Assignment 2/src/pagerank/davis_top_30_test.txt";
     public static final String TOP_30 = "/Users/ttperr/Documents/Git/Pro/3A/DD2477-SEIRS-KTH/Assignment 2/src/pagerank/davis_top_30.txt";
     public static final String DATA_WIKI = "../../data/davisWiki/";
+
+    public static final String SVWIKI = "/Users/ttperr/Documents/Git/Pro/3A/DD2477-SEIRS-KTH/Assignment 2/src/pagerank/linksSvwiki.txt";
+    public static final String SVWIKI_TITLES = "/Users/ttperr/Documents/Git/Pro/3A/DD2477-SEIRS-KTH/Assignment 2/src/pagerank/svwikiTitles.txt";
 
     /**
      * Mapping from document names to document numbers.
@@ -78,14 +81,14 @@ public class PageRank {
 
     public PageRank(String filename, int numberOfRuns) {
         int noOfDocs = readDocs(filename);
-        docTitle = readTitles();
+        docTitle = readTitles(DAVIS_TITLES_TXT);
 
         HashMap<Integer, Double> top30scores = readScores(TOP_30);
 
         System.out.println("MC End Point Random Start");
         double startTime = System.currentTimeMillis();
         double[] scores = mcEndPointRandomStart(noOfDocs, numberOfRuns);
-        printPageRank(scores, "src/pagerank/mcEndPointRandomStart.txt", true);
+        printPageRank(scores, "src/pagerank/mcEndPointRandomStart.txt", true, true);
         double endTime = System.currentTimeMillis();
         System.out.println("Time: " + (endTime - startTime) / 1000.0 + "s");
 
@@ -96,7 +99,7 @@ public class PageRank {
         System.out.println("MC End Point Cyclic Start");
         startTime = System.currentTimeMillis();
         scores = mcEndPointCyclicStart(noOfDocs, numberOfRuns);
-        printPageRank(scores, "src/pagerank/mcEndPointCyclicStart.txt", true);
+        printPageRank(scores, "src/pagerank/mcEndPointCyclicStart.txt", true, true);
         endTime = System.currentTimeMillis();
         System.out.println("Time: " + (endTime - startTime) / 1000.0 + "s");
 
@@ -107,7 +110,7 @@ public class PageRank {
         System.out.println("MC Complete Path Stop");
         startTime = System.currentTimeMillis();
         scores = mcCompletePathStop(noOfDocs, numberOfRuns);
-        printPageRank(scores, "src/pagerank/mcCompletePathStop.txt", true);
+        printPageRank(scores, "src/pagerank/mcCompletePathStop.txt", true, true);
         endTime = System.currentTimeMillis();
         System.out.println("Time: " + (endTime - startTime) / 1000.0 + "s");
 
@@ -118,13 +121,20 @@ public class PageRank {
         System.out.println("MC Complete Path Stop Random Start");
         startTime = System.currentTimeMillis();
         scores = mcCompletePathStopRandomStart(noOfDocs, numberOfRuns);
-        printPageRank(scores, "src/pagerank/mcCompletePathStopRandomStart.txt", true);
+        printPageRank(scores, "src/pagerank/mcCompletePathStopRandomStart.txt", true, true);
         endTime = System.currentTimeMillis();
         System.out.println("Time: " + (endTime - startTime) / 1000.0 + "s");
 
         top30scoresMC = readScores("src/pagerank/mcCompletePathStopRandomStart.txt");
         loss = computeLoss(top30scores, top30scoresMC);
         System.out.println("Loss: " + loss);
+    }
+
+    public PageRank(String filename, boolean isWiki) {
+        int noOfDocs = readDocs(filename);
+        double[] scores = mcCompletePathStop(noOfDocs, noOfDocs * 20);
+        printPageRank(scores, "src/pagerank/test_mc_wiki.text", true, false);
+        writeTitlesOnResult("src/pagerank/test_mc_wiki.text", SVWIKI_TITLES);
     }
 
 
@@ -206,7 +216,7 @@ public class PageRank {
         newScores[0] = 1.0;
         double[] inverseOut = new double[numberOfDocs];
 
-        docTitle = readTitles();
+        docTitle = readTitles(DAVIS_TITLES_TXT);
 
         for (int k = 0; k < numberOfDocs; k++) {
             inverseOut[k] = 1.0 / out[k];
@@ -238,7 +248,7 @@ public class PageRank {
                 break;
             }
         }
-        printPageRank(newScores, TOP_30_TEST_TXT, true);
+        printPageRank(newScores, TOP_30_TEST_TXT, true, true);
         double estimatedTime = (System.currentTimeMillis() - startTime) / 1000.0;
         System.err.println("PageRank done! Time: " + estimatedTime + "s");
     }
@@ -252,7 +262,7 @@ public class PageRank {
         return true;
     }
 
-    void printPageRank(double[] scores, String filename, boolean top30) {
+    void printPageRank(double[] scores, String filename, boolean top30, boolean printTitles) {
         int numberOfDocs = scores.length;
         List<Integer> resultList = new ArrayList<>();
         if (top30) {
@@ -277,8 +287,12 @@ public class PageRank {
         try {
             BufferedWriter writer = new BufferedWriter(new FileWriter(filename));
             for (Integer integer : resultList) {
-                writer.write(docName[integer] + ": " + scores[integer] + ": " +
-                        DATA_WIKI + docTitle[integer] + "\n");
+                if (printTitles) {
+                    writer.write(docName[integer] + ": " + scores[integer] + ": " +
+                            DATA_WIKI + docTitle[integer] + "\n");
+                } else {
+                    writer.write(integer + ": " + scores[integer] + "\n");
+                }
             }
             writer.close();
         } catch (IOException e) {
@@ -286,10 +300,10 @@ public class PageRank {
         }
     }
 
-    String[] readTitles() {
+    String[] readTitles(String filename) {
         String[] docTitle = new String[MAX_NUMBER_OF_DOCS];
         try {
-            BufferedReader reader = new BufferedReader(new FileReader(TITLES_TXT));
+            BufferedReader reader = new BufferedReader(new FileReader(filename));
             String line;
             int docID;
             while ((line = reader.readLine()) != null) {
@@ -309,6 +323,40 @@ public class PageRank {
             e.printStackTrace();
         }
         return docTitle;
+    }
+
+    private void writeTitlesOnResult(String result, String titles) {
+        String newFile = result.substring(0, result.lastIndexOf(".")) + "_withTitles.txt";
+        try {
+            BufferedReader resultReader = new BufferedReader(new FileReader(result));
+            BufferedWriter resultWriter = new BufferedWriter(new FileWriter(newFile));
+            String line;
+            boolean found;
+            while ((line = resultReader.readLine()) != null) {
+                String[] split = line.split(": ");
+                int docID = Integer.parseInt(split[0]);
+                BufferedReader titleReader = new BufferedReader(new FileReader(titles));
+                String titleLine;
+                found = false;
+                while ((titleLine = titleReader.readLine()) != null) {
+                    String[] splitTitle = titleLine.split(";");
+                    if (Integer.parseInt(splitTitle[0]) == docID) {
+                        resultWriter.write(split[0] + ": " + split[1] + ": " + splitTitle[1] + "\n");
+                        titleReader.close();
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found) {
+                    resultWriter.write(split[0] + ": " + split[1] + ": " + "No title found" + "\n");
+                    titleReader.close();
+                }
+            }
+            resultReader.close();
+            resultWriter.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     public double getScore(String docName) {
@@ -447,6 +495,8 @@ public class PageRank {
     public static void main(String[] args) {
         if (args.length != 1) {
             System.err.println("Please give the name of the link file");
+        } else if (args[0].equals(SVWIKI)) {
+            new PageRank(args[0], true);
         } else {
             new PageRank(args[0], 17478 * 100);
         }
