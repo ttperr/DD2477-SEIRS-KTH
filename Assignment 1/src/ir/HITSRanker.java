@@ -191,6 +191,7 @@ public class HITSRanker {
             }
             writer.close();
         } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
