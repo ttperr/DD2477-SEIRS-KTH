@@ -16,33 +16,33 @@ public class HITSRanker {
     public static final String SAVING_DIR = "Assignment 2/";
 
     /**
-     *   Max number of iterations for HITS
+     * Max number of iterations for HITS
      */
     final static int MAX_NUMBER_OF_STEPS = 1000;
 
     /**
-     *   Convergence criterion: hub and authority scores do not 
-     *   change more that EPSILON from one iteration to another.
+     * Convergence criterion: hub and authority scores do not
+     * change more that EPSILON from one iteration to another.
      */
     final static double EPSILON = 0.001;
 
     /**
-     *   The inverted index
+     * The inverted index
      */
     Index index;
 
     /**
-     *   Mapping from the titles to internal document ids used in the links file
+     * Mapping from the titles to internal document ids used in the links file
      */
     HashMap<String, Integer> titleToId = new HashMap<String, Integer>();
 
     /**
-     *   Sparse vector containing hub scores
+     * Sparse vector containing hub scores
      */
     HashMap<Integer, Double> hubs;
 
     /**
-     *   Sparse vector containing authority scores
+     * Sparse vector containing authority scores
      */
     HashMap<Integer, Double> authorities;
 
@@ -51,24 +51,24 @@ public class HITSRanker {
 
     /**
      * Constructs the HITSRanker object
-     *
+     * <p>
      * A set of linked documents can be presented as a graph.
      * Each page is a node in graph with a distinct nodeID associated with it.
      * There is an edge between two nodes if there is a link between two pages.
-     *
+     * <p>
      * Each line in the links file has the following format:
-     *  nodeID;outNodeID1,outNodeID2,...,outNodeIDK
+     * nodeID;outNodeID1,outNodeID2,...,outNodeIDK
      * This means that there are edges between nodeID and outNodeIDi, where i is between 1 and K.
-     *
+     * <p>
      * Each line in the titles file has the following format:
-     *  nodeID;pageTitle
-     *
+     * nodeID;pageTitle
+     * <p>
      * NOTE: nodeIDs are consistent between these two files, but they are NOT the same
-     *       as docIDs used by search engine's Indexer
+     * as docIDs used by search engine's Indexer
      *
-     * @param      linksFilename   File containing the links of the graph
-     * @param      titlesFilename  File containing the mapping between nodeIDs and pages titles
-     * @param      index           The inverted index
+     * @param linksFilename  File containing the links of the graph
+     * @param titlesFilename File containing the mapping between nodeIDs and pages titles
+     * @param index          The inverted index
      */
     public HITSRanker(String linksFilename, String titlesFilename, Index index) {
         this.index = index;
@@ -83,8 +83,7 @@ public class HITSRanker {
      * For example, given the path "davisWiki/hello.f",
      * the function will return "hello.f".
      *
-     * @param      path  The file path
-     *
+     * @param path The file path
      * @return The file name.
      */
     private String getFileName(String path) {
@@ -100,19 +99,31 @@ public class HITSRanker {
     /**
      * Reads the files describing the graph of the given set of pages.
      *
-     * @param      linksFilename   File containing the links of the graph
-     * @param      titlesFilename  File containing the mapping between nodeIDs and pages titles
+     * @param linksFilename  File containing the links of the graph
+     * @param titlesFilename File containing the mapping between nodeIDs and pages titles
      */
     void readDocs(String linksFilename, String titlesFilename) {
         //
         // YOUR CODE HERE
         //
+        try {
+            BufferedReader br = new BufferedReader(new FileReader(linksFilename));
+            String line;
+            while ((line = br.readLine()) != null) {
+                String[] parts = line.split(";");
+                int docId = Integer.parseInt(parts[0]);
+                titleToId.put(parts[1], docId);
+            }
+            br.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     /**
      * Perform HITS iterations until convergence
      *
-     * @param      titles  The titles of the documents in the root set
+     * @param titles The titles of the documents in the root set
      */
     private void iterate(String[] titles) {
         //
@@ -125,8 +136,7 @@ public class HITSRanker {
      * Rank the documents in the subgraph induced by the documents present
      * in the postings list `post`.
      *
-     * @param      post  The list of postings fulfilling a certain information need
-     *
+     * @param post The list of postings fulfilling a certain information need
      * @return A list of postings ranked according to the hub and authority scores.
      */
     PostingsList rank(PostingsList post) {
@@ -140,8 +150,7 @@ public class HITSRanker {
     /**
      * Sort a hash map by values in the descending order
      *
-     * @param      map    A hash map to sorted
-     *
+     * @param map A hash map to sorted
      * @return A hash map sorted by values
      */
     private HashMap<Integer, Double> sortHashMapByValue(HashMap<Integer, Double> map) {
@@ -150,11 +159,7 @@ public class HITSRanker {
         } else {
             List<Map.Entry<Integer, Double>> list = new ArrayList<Map.Entry<Integer, Double>>(map.entrySet());
 
-            Collections.sort(list, new Comparator<Map.Entry<Integer, Double>>() {
-                public int compare(Map.Entry<Integer, Double> o1, Map.Entry<Integer, Double> o2) {
-                    return (o2.getValue()).compareTo(o1.getValue());
-                }
-            });
+            list.sort((o1, o2) -> (o2.getValue()).compareTo(o1.getValue()));
 
             HashMap<Integer, Double> res = new LinkedHashMap<Integer, Double>();
             for (Map.Entry<Integer, Double> el : list) {
@@ -168,9 +173,9 @@ public class HITSRanker {
     /**
      * Write the first `k` entries of a hash map `map` to the file `fname`.
      *
-     * @param      map        A hash map
-     * @param      fname      The filename
-     * @param      k          A number of entries to write
+     * @param map   A hash map
+     * @param fname The filename
+     * @param k     A number of entries to write
      */
     void writeToFile(HashMap<Integer, Double> map, String fname, int k) {
         try {
@@ -192,8 +197,8 @@ public class HITSRanker {
 
     /**
      * Rank all the documents in the links file. Produces two files:
-     *  hubs_top_30.txt with documents containing top 30 hub scores
-     *  authorities_top_30.txt with documents containing top 30 authority scores
+     * hubs_top_30.txt with documents containing top 30 hub scores
+     * authorities_top_30.txt with documents containing top 30 authority scores
      */
     void rank() {
         iterate(titleToId.keySet().toArray(new String[0]));
