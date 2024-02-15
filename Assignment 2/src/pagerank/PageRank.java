@@ -132,7 +132,7 @@ public class PageRank {
 
     public PageRank(String filename, boolean isWiki) {
         int noOfDocs = readDocs(filename);
-        scores = mcCompletePathStop(noOfDocs, noOfDocs * 20);
+        scores = mcCompletePathStop(noOfDocs, noOfDocs * 30);
         printPageRank(scores, "src/pagerank/test_mc_wiki.text", true, false);
         writeTitlesOnResult("src/pagerank/test_mc_wiki.text", SV_WIKI_TITLES);
     }
