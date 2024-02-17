@@ -173,7 +173,6 @@ public class HITSRanker {
         }
 
         for (int i = 0; i < MAX_NUMBER_OF_STEPS; i++) {
-            System.out.println("Step " + i);
             HashMap<Integer, Double> newHubs = new HashMap<>();
             HashMap<Integer, Double> newAuthorities = new HashMap<>();
             double hubsNorm = 0;
@@ -236,12 +235,12 @@ public class HITSRanker {
         //
         String[] titles = new String[post.size()];
         for (int i = 0; i < post.size(); i++) {
-            titles[i] = index.docNames.get(post.get(i).docID);
+            titles[i] = getFileName(index.docNames.get(post.get(i).docID));
         }
         iterate(titles);
         HashMap<Integer, Double> scores = new HashMap<>();
         for (int i = 0; i < post.size(); i++) {
-            scores.put(post.get(i).docID, alpha * hubs.get(titleToId.get(index.docNames.get(post.get(i).docID))) + beta * authorities.get(titleToId.get(index.docNames.get(post.get(i).docID))));
+            scores.put(post.get(i).docID, alpha * hubs.get(titleToId.get(getFileName(index.docNames.get(post.get(i).docID)))) + beta * authorities.get(titleToId.get(getFileName(index.docNames.get(post.get(i).docID)))));
         }
         scores = sortHashMapByValue(scores);
         PostingsList ranked = new PostingsList();
