@@ -11,6 +11,7 @@ import pagerank.PageRank;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Objects;
 
 /**
  * Searches an index for results of a query.
@@ -32,6 +33,8 @@ public class Searcher {
      */
     PageRank pageRank;
 
+    HITSRanker hitsRanker;
+
     static final HashMap<Integer, Double> euclideanLengths = new HashMap<>();
 
     final double TFIDF_WEIGHT = 1;
@@ -45,6 +48,7 @@ public class Searcher {
         this.kgIndex = kgIndex;
         pageRank = new PageRank("../../Assignment 2/src/pagerank/linksDavis.txt");
         index.readEuclideanLengths(euclideanLengths);
+        hitsRanker = new HITSRanker("../../Assignment 2/src/pagerank/linksDavis.txt", "../../Assignment 2/src/pagerank/davisTitles.txt", index);
         System.err.println("Ready to receive queries!");
     }
 
@@ -68,6 +72,8 @@ public class Searcher {
                 return rankedQueryPageRank(query);
             } else if (rankingType == RankingType.COMBINATION) {
                 return rankedQueryCombination(query, normType);
+            } else if (rankingType == RankingType.HITS) {
+                return rankedQueryHITS(query);
             }
         }
         return null;
@@ -248,5 +254,34 @@ public class Searcher {
         }
         result.sort();
         return result;
+    }
+
+    private PostingsList rankedQueryHITS(Query query) {
+        PostingsList result = new PostingsList();
+        HashMap<Integer, Double> scores = new HashMap<>();
+        for (int i = 0; i < query.queryterm.size(); i++) {
+            computeHITS(query, i, scores);
+        }
+        for (int docID : scores.keySet()) {
+            result.add(docID, 0, scores.get(docID));
+        }
+        result.sort();
+        return result;
+    }
+
+    private void computeHITS(Query query, int i, HashMap<Integer, Double> scores) {
+        PostingsList postingsList = index.getPostings(query.queryterm.get(i).term);
+        if (postingsList != null) {
+            postingsList = hitsRanker.rank(postingsList);
+            for (int j = 0; j < postingsList.size(); j++) {
+                int docID = postingsList.get(j).docID;
+                double score = postingsList.get(j).score;
+                if (scores.containsKey(docID)) {
+                    scores.put(docID, scores.get(docID) + score);
+                } else {
+                    scores.put(docID, score);
+                }
+            }
+        }
     }
 }

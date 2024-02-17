@@ -71,6 +71,7 @@ public class SearchGUI extends JFrame {
     JRadioButtonMenuItem tfidfItem = new JRadioButtonMenuItem( "tf-idf" );
     JRadioButtonMenuItem pagerankItem = new JRadioButtonMenuItem( "PageRank" );
     JRadioButtonMenuItem combinationItem = new JRadioButtonMenuItem( "Combination" );
+    JRadioButtonMenuItem hitsItem = new JRadioButtonMenuItem( "HITS" );
     JRadioButtonMenuItem numberOfWordsItem = new JRadioButtonMenuItem( "Number of words" );
     JRadioButtonMenuItem euclideanLengthItem = new JRadioButtonMenuItem( "Euclidean length" );
     ButtonGroup queries = new ButtonGroup();
@@ -112,6 +113,7 @@ public class SearchGUI extends JFrame {
         rankingMenu.add( tfidfItem );
         rankingMenu.add( pagerankItem );
         rankingMenu.add( combinationItem );
+        rankingMenu.add( hitsItem );
         normalizationMenu.add(numberOfWordsItem);
         normalizationMenu.add(euclideanLengthItem);
         queries.add( intersectionItem );
@@ -120,6 +122,7 @@ public class SearchGUI extends JFrame {
         ranking.add( tfidfItem );
         ranking.add( pagerankItem );
         ranking.add( combinationItem );
+        ranking.add( hitsItem );
         normalization.add(numberOfWordsItem);
         normalization.add(euclideanLengthItem);
         intersectionItem.setSelected( true );
@@ -259,6 +262,13 @@ public class SearchGUI extends JFrame {
             }
             };
         combinationItem.addActionListener( setCombinationRanking );
+
+        Action setHITSRanking = new AbstractAction() {
+            public void actionPerformed( ActionEvent e ) {
+                rankingType = RankingType.HITS;
+            }
+            };
+        hitsItem.addActionListener(setHITSRanking);
 
         Action setNumberOfWordsNormalization = new AbstractAction() {
             public void actionPerformed( ActionEvent e ) {

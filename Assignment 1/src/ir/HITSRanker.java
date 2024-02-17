@@ -14,6 +14,16 @@ import java.io.*;
 
 public class HITSRanker {
 
+    /**
+     * Ratio of hub score to authority score
+     */
+    public static int alpha = 1;
+
+    /**
+     * Ratio of authority score to hub score
+     */
+    public static int beta = 1;
+
     public static final String SAVING_DIR = "Assignment 2/";
 
     /**
@@ -231,7 +241,7 @@ public class HITSRanker {
         iterate(titles);
         HashMap<Integer, Double> scores = new HashMap<>();
         for (int i = 0; i < post.size(); i++) {
-            scores.put(post.get(i).docID, hubs.get(titleToId.get(index.docNames.get(post.get(i).docID))) + authorities.get(titleToId.get(index.docNames.get(post.get(i).docID))));
+            scores.put(post.get(i).docID, alpha * hubs.get(titleToId.get(index.docNames.get(post.get(i).docID))) + beta * authorities.get(titleToId.get(index.docNames.get(post.get(i).docID))));
         }
         scores = sortHashMapByValue(scores);
         PostingsList ranked = new PostingsList();
