@@ -46,6 +46,7 @@ public class HITSRanker {
      * Mapping from the titles to internal document ids used in the links file
      */
     HashMap<String, Integer> titleToId = new HashMap<String, Integer>();
+    HashMap<Integer, String> idToTitle = new HashMap<Integer, String>();
 
     /**
      * Mapping from the internal document ids to links (i.e. nodeIDs)
@@ -129,6 +130,7 @@ public class HITSRanker {
                 String[] parts = line.split(";");
                 int docId = Integer.parseInt(parts[0]);
                 titleToId.put(parts[1], docId);
+                idToTitle.put(docId, parts[1]);
             }
             br.close();
         } catch (IOException e) {
@@ -164,10 +166,40 @@ public class HITSRanker {
         //
         // YOUR CODE HERE
         //
+
+        // Computing the base set
+        String[] baseSet = new String[0];
+        for (String title : titles) {
+            baseSet = Arrays.copyOf(baseSet, baseSet.length + 1);
+            baseSet[baseSet.length - 1] = title;
+        }
+        // Adding the document that are linked to the root set
+        for (String title : titles) {
+            int docId = titleToId.get(title);
+            for (int link : links.get(docId)) {
+                if (!Arrays.asList(baseSet).contains(idToTitle.get(link))) {
+                    baseSet = Arrays.copyOf(baseSet, baseSet.length + 1);
+                    baseSet[baseSet.length - 1] = idToTitle.get(link);
+                }
+            }
+        }
+        // Adding the document that are linked from the root set
+        for (String title : titles) {
+            int docId = titleToId.get(title);
+            for (Map.Entry<Integer, ArrayList<Integer>> entry : links.entrySet()) {
+                if (entry.getValue().contains(docId)) {
+                    if (!Arrays.asList(baseSet).contains(idToTitle.get(entry.getKey()))) {
+                        baseSet = Arrays.copyOf(baseSet, baseSet.length + 1);
+                        baseSet[baseSet.length - 1] = idToTitle.get(entry.getKey());
+                    }
+                }
+            }
+        }
+
         hubs = new HashMap<>();
         authorities = new HashMap<>();
 
-        for (String title : titles) {
+        for (String title : baseSet) {
             hubs.put(titleToId.get(title), 1.0);
             authorities.put(titleToId.get(title), 1.0);
         }
@@ -179,12 +211,12 @@ public class HITSRanker {
             double authoritiesNorm = 0;
             boolean converged = true;
 
-            for (String title : titles) {
+            for (String title : baseSet) {
                 int docId = titleToId.get(title);
                 double hub = 0;
                 double authority = 0;
 
-                for (String link : titles) {
+                for (String link : baseSet) {
                     int linkId = titleToId.get(link);
                     if (links.get(linkId).contains(docId)) {
                         authority += hubs.get(linkId);
@@ -204,8 +236,14 @@ public class HITSRanker {
             hubsNorm = Math.sqrt(hubsNorm);
 
             for (Integer docId : newAuthorities.keySet()) {
-                double newAuthority = newAuthorities.get(docId) / authoritiesNorm;
-                double newHub = newHubs.get(docId) / hubsNorm;
+                double newAuthority = 0;
+                if (authoritiesNorm != 0) {
+                    newAuthority = newAuthorities.get(docId) / authoritiesNorm;
+                }
+                double newHub = 0;
+                if (hubsNorm != 0) {
+                    newHub = newHubs.get(docId) / hubsNorm;
+                }
                 if (converged && Math.abs(authorities.get(docId) - newAuthority) > EPSILON) {
                     converged = false;
                 }
