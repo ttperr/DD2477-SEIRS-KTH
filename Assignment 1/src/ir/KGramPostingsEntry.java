@@ -8,7 +8,9 @@
 package ir;
 
 
-public class KGramPostingsEntry {
+import java.io.Serializable;
+
+public class KGramPostingsEntry implements Serializable {
     int tokenID;
 
     public KGramPostingsEntry(int tokenID) {

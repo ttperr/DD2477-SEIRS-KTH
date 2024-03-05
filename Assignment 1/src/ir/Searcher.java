@@ -11,6 +11,7 @@ import pagerank.PageRank;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -61,6 +62,28 @@ public class Searcher {
         //
         //  REPLACE THE STATEMENT BELOW WITH YOUR CODE
         //
+        List<KGramPostingsEntry> postings = null;
+        for (Query.QueryTerm queryTerm : query.queryterm) {
+            if (queryTerm.term.length() == kgIndex.getK()) {
+                if (postings == null) {
+                    postings = kgIndex.getPostings(queryTerm.term);
+                } else {
+                    postings = kgIndex.intersect(postings, kgIndex.getPostings(queryTerm.term));
+                }
+            }
+        }
+        if (postings != null) {
+            int resNum = postings.size();
+            System.err.println("Found " + resNum + " posting(s)");
+            if (resNum > 10) {
+                System.err.println("The first 10 of them are:");
+                resNum = 10;
+            }
+            for (int i = 0; i < resNum; i++) {
+                System.err.println(kgIndex.getTermByID(postings.get(i).tokenID));
+            }
+        }
+
         if (queryType == QueryType.INTERSECTION_QUERY) {
             return intersectionQuery(query);
         } else if (queryType == QueryType.PHRASE_QUERY) {

@@ -12,7 +12,7 @@ import java.util.*;
 import java.nio.charset.StandardCharsets;
 
 
-public class KGramIndex {
+public class KGramIndex implements Serializable {
 
     /**
      * Mapping from term ids to actual term strings
@@ -62,7 +62,7 @@ public class KGramIndex {
     /**
      * Get intersection of two postings lists
      */
-    private List<KGramPostingsEntry> intersect(List<KGramPostingsEntry> p1, List<KGramPostingsEntry> p2) {
+    List<KGramPostingsEntry> intersect(List<KGramPostingsEntry> p1, List<KGramPostingsEntry> p2) {
         // 
         // YOUR CODE HERE
         //
@@ -164,6 +164,33 @@ public class KGramIndex {
             }
         }
         return decodedArgs;
+    }
+
+    public void save(String filename) {
+        File file = new File(filename);
+        try {
+            FileOutputStream fos = new FileOutputStream(file);
+            ObjectOutputStream oos = new ObjectOutputStream(fos);
+            oos.writeObject(this);
+            oos.close();
+            fos.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        System.out.println("KGramIndex written");
+    }
+
+    public KGramIndex read(String filename) {
+        File file = new File(filename);
+        try {
+            FileInputStream fis = new FileInputStream(file);
+            ObjectInputStream ois = new ObjectInputStream(fis);
+            System.out.println("KGramIndex read");
+            return (KGramIndex) ois.readObject();
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
     public static void main(String[] arguments) throws FileNotFoundException, IOException {
