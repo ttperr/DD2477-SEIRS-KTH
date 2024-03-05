@@ -46,7 +46,7 @@ public class Searcher {
     public Searcher(Index index, KGramIndex kgIndex) {
         this.index = index;
         this.kgIndex = kgIndex;
-        pageRank = new PageRank("../../Assignment 2/src/pagerank/linksDavis.txt");
+        // pageRank = new PageRank("../../Assignment 2/src/pagerank/linksDavis.txt");
         index.readEuclideanLengths(euclideanLengths);
         hitsRanker = new HITSRanker("../../Assignment 2/src/pagerank/linksDavis.txt", "../../Assignment 2/src/pagerank/davisTitles.txt", index);
         System.err.println("Ready to receive queries!");
