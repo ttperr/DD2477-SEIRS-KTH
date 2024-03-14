@@ -113,7 +113,6 @@ public class Query {
         //
         //  YOUR CODE HERE
         //
-
         // Rocchio algorithm
         double numRelevant = 0;
         // Calculate the number of relevant documents
@@ -122,19 +121,19 @@ public class Query {
                 numRelevant++;
             }
         }
-        double betaWeight = beta / numRelevant;
 
         HashMap<String, Double> newQuery = new HashMap<>();
         for (QueryTerm queryTerm : queryterm) {
-            newQuery.put(queryTerm.term, alpha * queryTerm.weight);
+            queryTerm.weight *= alpha;
+            newQuery.put(queryTerm.term, queryTerm.weight);
         }
         for (int i = 0; i < docIsRelevant.length; i++) {
             if (docIsRelevant[i]) {
                 PostingsEntry entry = results.get(i);
                 String docName = engine.index.docNames.get(entry.docID);
-                List<String> wordsList = getWords(docName);
-                for (String word : wordsList) {
-                    newQuery.merge(word, betaWeight, Double::sum);
+                HashMap<String, Double> words = getWords(docName);
+                for (String word : words.keySet()) {
+                    newQuery.merge(word, beta * words.get(word) / numRelevant, Double::sum);
                 }
             }
         }
@@ -145,13 +144,14 @@ public class Query {
         }
     }
 
-    public ArrayList<String> getWords(String docName) {
-        ArrayList<String> words = new ArrayList<>();
+    public HashMap<String, Double> getWords(String docName) {
+        HashMap<String, Double> words = new HashMap<>();
         try {
             Reader reader = new InputStreamReader(new FileInputStream(docName), StandardCharsets.UTF_8);
             Tokenizer tokenizer = new Tokenizer(reader, true, false, true, "patterns.txt");
             while (tokenizer.hasMoreTokens()) {
-                words.add(tokenizer.nextToken());
+                String token = tokenizer.nextToken();
+                words.merge(token, 1.0, Double::sum);
             }
         } catch (IOException e) {
             System.err.println("Warning: IOException during indexing.");

@@ -219,7 +219,7 @@ public class Searcher {
             for (int j = 0; j < postingsList.size(); j++) {
                 int docID = postingsList.get(j).docID;
                 double tf = postingsList.get(j).score;
-                scores[docID] += tf * idf;
+                scores[docID] += tf * idf * query.queryterm.get(i).weight;
             }
         }
     }
