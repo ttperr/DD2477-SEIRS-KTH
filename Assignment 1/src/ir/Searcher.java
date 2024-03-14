@@ -84,6 +84,14 @@ public class Searcher {
             }
         }
 
+        boolean wildcard = false;
+        for (Query.QueryTerm queryTerm : query.queryterm) {
+            if (queryTerm.term.contains("*")) {
+                wildcard = true;
+                break;
+            }
+        }
+
         if (queryType == QueryType.INTERSECTION_QUERY) {
             return intersectionQuery(query);
         } else if (queryType == QueryType.PHRASE_QUERY) {
