@@ -121,11 +121,13 @@ public class Query {
                 numRelevant++;
             }
         }
-
-        HashMap<String, Double> newQuery = new HashMap<>();
+        if (numRelevant == 0) {
+            return;
+        }
+        Query newQuery = new Query();
         for (QueryTerm queryTerm : queryterm) {
-            queryTerm.weight *= alpha;
-            newQuery.put(queryTerm.term, queryTerm.weight);
+            queryTerm.weight *= alpha / numRelevant;
+            newQuery.queryterm.add(queryTerm);
         }
         for (int i = 0; i < docIsRelevant.length; i++) {
             if (docIsRelevant[i]) {
@@ -133,15 +135,21 @@ public class Query {
                 String docName = engine.index.docNames.get(entry.docID);
                 HashMap<String, Double> words = getWords(docName);
                 for (String word : words.keySet()) {
-                    newQuery.merge(word, beta * words.get(word) / numRelevant, Double::sum);
+                    boolean found = false;
+                    for (QueryTerm queryTerm : newQuery.queryterm) {
+                        if (queryTerm.term.equals(word)) {
+                            queryTerm.weight += beta * words.get(word) / numRelevant;
+                            found = true;
+                            break;
+                        }
+                    }
+                    if (!found) {
+                        newQuery.queryterm.add(new QueryTerm(word, beta * words.get(word) / numRelevant));
+                    }
                 }
             }
         }
-
-        queryterm = new ArrayList<>();
-        for (Map.Entry<String, Double> entry : newQuery.entrySet()) {
-            queryterm.add(new QueryTerm(entry.getKey(), entry.getValue()));
-        }
+        queryterm = newQuery.queryterm;
     }
 
     public HashMap<String, Double> getWords(String docName) {

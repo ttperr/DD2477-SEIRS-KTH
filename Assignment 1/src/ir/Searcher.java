@@ -11,8 +11,8 @@ import pagerank.PageRank;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
-import java.util.Objects;
 
 /**
  * Searches an index for results of a query.
@@ -83,19 +83,16 @@ public class Searcher {
                 System.err.println(kgIndex.getTermByID(postings.get(i).tokenID));
             }
         }
-
-        boolean wildcard = false;
+        boolean wildCard = false;
         for (Query.QueryTerm queryTerm : query.queryterm) {
             if (queryTerm.term.contains("*")) {
-                wildcard = true;
-                break;
+                wildCard = true;
             }
         }
-
         if (queryType == QueryType.INTERSECTION_QUERY) {
-            return intersectionQuery(query);
+            return wildCard ? intersectionWildCardQuery(query) : intersectionQuery(query);
         } else if (queryType == QueryType.PHRASE_QUERY) {
-            return phraseQuery(query);
+            return wildCard ? phraseWildCardQuery(query) : phraseQuery(query);
         } else if (queryType == QueryType.RANKED_QUERY) {
             if (rankingType == RankingType.TF_IDF) {
                 return rankedQueryTFIDF(query, normType);
@@ -115,12 +112,34 @@ public class Searcher {
         for (int i = 0; i < query.queryterm.size(); i++) {
             postingsLists.add(index.getPostings(query.queryterm.get(i).term));
         }
+        return intersectQueries(postingsLists);
+    }
+
+    private PostingsList intersectionWildCardQuery(Query query) {
+        ArrayList<PostingsList> postingsLists = new ArrayList<>();
+        for (int i = 0; i < query.queryterm.size(); i++) {
+            HashSet<String> words = wildCardSearch(query.queryterm.get(i).term);
+            PostingsList postingsList = new PostingsList();
+            for (String word : words) {
+                PostingsList postings = index.getPostings(word);
+                if (postings != null) {
+                    postingsList = merge(postingsList, postings);
+                }
+            }
+            postingsLists.add(postingsList);
+        }
+        return intersectQueries(postingsLists);
+    }
+
+    private PostingsList intersectQueries(ArrayList<PostingsList> postingsLists) {
         if (postingsLists.isEmpty()) {
             return new PostingsList();
         }
         PostingsList result = postingsLists.getFirst();
         for (int i = 1; i < postingsLists.size(); i++) {
-            result = intersect(result, postingsLists.get(i));
+            if (result != null && postingsLists.get(i) != null) {
+                result = intersect(result, postingsLists.get(i));
+            }
         }
         return result;
     }
@@ -132,9 +151,12 @@ public class Searcher {
         while (i < p1.size() && j < p2.size()) {
             if (p1.get(i).docID == p2.get(j).docID) {
                 if (result.size() == 0 || result.get(result.size() - 1).docID != p1.get(i).docID) {
-                    result.add(p1.get(i).docID, p1.get(i).offsets.getFirst(), p1.get(i).score + p2.get(j).score);
+                    PostingsEntry entry = new PostingsEntry(p1.get(i).docID, p1.get(i).offsets, p1.get(i).score + p2.get(j).score);
+                    entry.addOffsets(p2.get(j).offsets);
+                    result.add(entry);
                 } else {
-                    result.get(result.size() - 1).score++;
+                    result.get(result.size() - 1).score = result.get(result.size() - 1).score + p2.get(j).score;
+                    result.get(result.size() - 1).addOffsets(p2.get(j).offsets);
                 }
                 i++;
                 j++;
@@ -147,11 +169,66 @@ public class Searcher {
         return result;
     }
 
+    private PostingsList merge(PostingsList p1, PostingsList p2) {
+        PostingsList result = new PostingsList();
+        int i = 0;
+        int j = 0;
+        while (i < p1.size() && j < p2.size()) {
+            if (p1.get(i).docID == p2.get(j).docID) {
+                if (result.size() == 0 || result.get(result.size() - 1).docID != p1.get(i).docID) {
+                    PostingsEntry newEntry = new PostingsEntry(p1.get(i).docID, p1.get(i).offsets, p1.get(i).score + p2.get(j).score);
+                    newEntry.addOffsets(p2.get(j).offsets);
+                    result.add(newEntry);
+                } else {
+                    result.get(result.size() - 1).score = result.get(result.size() - 1).score + p2.get(j).score;
+                    result.get(result.size() - 1).addOffsets(p2.get(j).offsets);
+                }
+                i++;
+                j++;
+            } else if (p1.get(i).docID < p2.get(j).docID) {
+                result.add(p1.get(i));
+                i++;
+            } else {
+                result.add(p2.get(j));
+                j++;
+            }
+        }
+        while (i < p1.size()) {
+            result.add(p1.get(i));
+            i++;
+        }
+        while (j < p2.size()) {
+            result.add(p2.get(j));
+            j++;
+        }
+        return result;
+    }
+
     private PostingsList phraseQuery(Query query) {
         ArrayList<PostingsList> postingsLists = new ArrayList<>();
         for (int i = 0; i < query.queryterm.size(); i++) {
             postingsLists.add(index.getPostings(query.queryterm.get(i).term));
         }
+        return intersectPhraseQueries(postingsLists);
+    }
+
+    private PostingsList phraseWildCardQuery(Query query) {
+        ArrayList<PostingsList> postingsLists = new ArrayList<>();
+        for (int i = 0; i < query.queryterm.size(); i++) {
+            HashSet<String> words = wildCardSearch(query.queryterm.get(i).term);
+            PostingsList postingsList = new PostingsList();
+            for (String word : words) {
+                PostingsList postings = index.getPostings(word);
+                if (postings != null) {
+                    postingsList = merge(postingsList, postings);
+                }
+            }
+            postingsLists.add(postingsList);
+        }
+        return intersectPhraseQueries(postingsLists);
+    }
+
+    private PostingsList intersectPhraseQueries(ArrayList<PostingsList> postingsLists) {
         if (postingsLists.isEmpty()) {
             return new PostingsList();
         }
@@ -314,5 +391,51 @@ public class Searcher {
                 }
             }
         }
+    }
+
+    private HashSet<String> wildCardSearch(String token) {
+        HashSet<String> result = new HashSet<>();
+        if (!token.contains("*")) {
+            result.add(token);
+        } else if (token.startsWith("*")) {
+            token = token + "$";
+            String kgram = token.substring(1, 3);
+            List<KGramPostingsEntry> postings = kgIndex.getPostings(kgram);
+            String word;
+            for (KGramPostingsEntry entry : postings) {
+                word = kgIndex.getTermByID(entry.tokenID);
+                if (word.endsWith(token.substring(2))) {
+                    result.add(word);
+                }
+            }
+        } else if (token.endsWith("*")) {
+            token = "^" + token;
+            String kgram = token.substring(token.length() - 3, token.length() - 1);
+            List<KGramPostingsEntry> postings = kgIndex.getPostings(kgram);
+            String word;
+            for (KGramPostingsEntry entry : postings) {
+                word = kgIndex.getTermByID(entry.tokenID);
+                if (word.startsWith(token.substring(1, token.length() - 1))) {
+                    result.add(word);
+                }
+            }
+        } else {
+            token = "^" + token + "$";
+            int index = token.indexOf("*");
+            String kgram1 = token.substring(index - 2, index);
+            String kgram2 = token.substring(index + 1, index + 3);
+            List<KGramPostingsEntry> postings1 = kgIndex.getPostings(kgram1);
+            List<KGramPostingsEntry> postings2 = kgIndex.getPostings(kgram2);
+            List<KGramPostingsEntry> postings = kgIndex.intersect(postings1, postings2);
+            String word;
+            for (KGramPostingsEntry entry : postings) {
+                word = kgIndex.getTermByID(entry.tokenID);
+                if (word.startsWith(token.substring(1, index)) && word.endsWith(token.substring(index + 1, token.length() - 1))) {
+                    result.add(word);
+                }
+            }
+
+        }
+        return result;
     }
 }

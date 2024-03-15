@@ -57,5 +57,20 @@ public class PostingsEntry implements Comparable<PostingsEntry>, Serializable {
         s.append(score);
         return s.toString();
     }
+
+    public void addOffset(int offset) {
+        for (int i = 0; i < offsets.size(); i++) {
+            if (offsets.get(i) > offset) {
+                offsets.add(i, offset);
+                return;
+            }
+        }
+    }
+
+    public void addOffsets(ArrayList<Integer> newOffsets) {
+        for (Integer newOffset : newOffsets) {
+            addOffset(newOffset);
+        }
+    }
 }
 
