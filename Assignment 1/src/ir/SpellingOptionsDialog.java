@@ -19,9 +19,9 @@ public class SpellingOptionsDialog {
     }
 
     /**
-     *  Show the dialog window with a dropdown menu with a <code>possibilities</code>
-     *  presented in the exact order as they are provided with <code>defaultOption</code>
-     *  being chosen by default.
+     * Show the dialog window with a dropdown menu with a <code>possibilities</code>
+     * presented in the exact order as they are provided with <code>defaultOption</code>
+     * being chosen by default.
      */
     public String show(String[] possibilities, String defaultOption) {
         int numOptions = possibilities.length;
@@ -37,14 +37,13 @@ public class SpellingOptionsDialog {
         }
 
 
-        String s = (String)JOptionPane.showInputDialog(
-                            null,
-                            "Did you mean one of those?",
-                            "Automatic Spelling Correction",
-                            JOptionPane.PLAIN_MESSAGE,
-                            null,
-                            possibilities,
-                            defaultOption);
-        return s;
+        return (String) JOptionPane.showInputDialog(
+                null,
+                "Did you mean one of those?",
+                "Automatic Spelling Correction",
+                JOptionPane.PLAIN_MESSAGE,
+                null,
+                possibilities,
+                defaultOption);
     }
 }

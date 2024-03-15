@@ -11,13 +11,19 @@ import java.util.List;
 
 
 public class SpellChecker {
-    /** The regular inverted index to be used by the spell checker */
+    /**
+     * The regular inverted index to be used by the spell checker
+     */
     Index index;
 
-    /** K-gram index to be used by the spell checker */
+    /**
+     * K-gram index to be used by the spell checker
+     */
     KGramIndex kgIndex;
 
-    /** The auxiliary class for containing the value of your ranking function for a token */
+    /**
+     * The auxiliary class for containing the value of your ranking function for a token
+     */
     class KGramStat implements Comparable {
         double score;
         String token;
@@ -32,8 +38,8 @@ public class SpellChecker {
         }
 
         public int compareTo(Object other) {
-            if (this.score == ((KGramStat)other).score) return 0;
-            return this.score < ((KGramStat)other).score ? -1 : 1;
+            if (this.score == ((KGramStat) other).score) return 0;
+            return this.score < ((KGramStat) other).score ? -1 : 1;
         }
 
         public String toString() {
@@ -49,9 +55,9 @@ public class SpellChecker {
 
 
     /**
-      * The threshold for edit distance for a candidate spelling
-      * correction to be accepted.
-      */
+     * The threshold for edit distance for a candidate spelling
+     * correction to be accepted.
+     */
     private static final int MAX_EDIT_DISTANCE = 2;
 
 
@@ -61,9 +67,9 @@ public class SpellChecker {
     }
 
     /**
-     *  Computes the Jaccard coefficient for two sets A and B, where the size of set A is 
-     *  <code>szA</code>, the size of set B is <code>szB</code> and the intersection 
-     *  of the two sets contains <code>intersection</code> elements.
+     * Computes the Jaccard coefficient for two sets A and B, where the size of set A is
+     * <code>szA</code>, the size of set B is <code>szB</code> and the intersection
+     * of the two sets contains <code>intersection</code> elements.
      */
     private double jaccard(int szA, int szB, int intersection) {
         //
@@ -75,9 +81,9 @@ public class SpellChecker {
     /**
      * Computing Levenshtein edit distance using dynamic programming.
      * Allowed operations are:
-     *      => insert (cost 1)
-     *      => delete (cost 1)
-     *      => substitute (cost 2)
+     * => insert (cost 1)
+     * => delete (cost 1)
+     * => substitute (cost 2)
      */
     private int editDistance(String s1, String s2) {
         //
@@ -88,8 +94,8 @@ public class SpellChecker {
     }
 
     /**
-     *  Checks spelling of all terms in <code>query</code> and returns up to
-     *  <code>limit</code> ranked suggestions for spelling correction.
+     * Checks spelling of all terms in <code>query</code> and returns up to
+     * <code>limit</code> ranked suggestions for spelling correction.
      */
     public String[] check(Query query, int limit) {
         //
@@ -100,9 +106,9 @@ public class SpellChecker {
     }
 
     /**
-     *  Merging ranked candidate spelling corrections for all query terms available in
-     *  <code>qCorrections</code> into one final merging of query phrases. Returns up
-     *  to <code>limit</code> corrected phrases.
+     * Merging ranked candidate spelling corrections for all query terms available in
+     * <code>qCorrections</code> into one final merging of query phrases. Returns up
+     * to <code>limit</code> corrected phrases.
      */
     private List<KGramStat> mergeCorrections(List<List<KGramStat>> qCorrections, int limit) {
         //
