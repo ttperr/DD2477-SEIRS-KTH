@@ -87,6 +87,7 @@ public class Searcher {
         for (Query.QueryTerm queryTerm : query.queryterm) {
             if (queryTerm.term.contains("*")) {
                 wildCard = true;
+                break;
             }
         }
         if (queryType == QueryType.INTERSECTION_QUERY) {
@@ -94,6 +95,7 @@ public class Searcher {
         } else if (queryType == QueryType.PHRASE_QUERY) {
             return wildCard ? phraseWildCardQuery(query) : phraseQuery(query);
         } else if (queryType == QueryType.RANKED_QUERY) {
+            query = wildCard ? wildCardQuery(query) : query;
             if (rankingType == RankingType.TF_IDF) {
                 return rankedQueryTFIDF(query, normType);
             } else if (rankingType == RankingType.PAGERANK) {
@@ -180,7 +182,8 @@ public class Searcher {
                     newEntry.addOffsets(p2.get(j).offsets);
                     result.add(newEntry);
                 } else {
-                    result.get(result.size() - 1).score = result.get(result.size() - 1).score + p2.get(j).score;
+                    result.get(result.size() - 1).score += p1.get(j).score + p2.get(i).score;
+                    result.get(result.size() - 1).addOffsets(p1.get(i).offsets);
                     result.get(result.size() - 1).addOffsets(p2.get(j).offsets);
                 }
                 i++;
@@ -404,7 +407,7 @@ public class Searcher {
             String word;
             for (KGramPostingsEntry entry : postings) {
                 word = kgIndex.getTermByID(entry.tokenID);
-                if (word.endsWith(token.substring(2))) {
+                if (word.endsWith(token.substring(1, token.length() - 1))) {
                     result.add(word);
                 }
             }
@@ -434,8 +437,22 @@ public class Searcher {
                     result.add(word);
                 }
             }
-
         }
         return result;
+    }
+
+    private Query wildCardQuery(Query query) {
+        Query newQuery = new Query();
+        for (Query.QueryTerm queryTerm : query.queryterm) {
+            if (queryTerm.term.contains("*")) {
+                HashSet<String> words = wildCardSearch(queryTerm.term);
+                for (String word : words) {
+                    newQuery.queryterm.add(new Query.QueryTerm(word, queryTerm.weight));
+                }
+            } else {
+                newQuery.queryterm.add(queryTerm);
+            }
+        }
+        return newQuery;
     }
 }

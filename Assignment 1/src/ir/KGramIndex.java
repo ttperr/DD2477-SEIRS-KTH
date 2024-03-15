@@ -90,7 +90,7 @@ public class KGramIndex implements Serializable {
         //
         // YOUR CODE HERE
         //
-        if (getIDByTerm(token) != null || token.length() < K) {
+        if (getIDByTerm(token) != null) {
             return;
         }
         int termID = generateTermID();
