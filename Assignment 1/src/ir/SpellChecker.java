@@ -7,7 +7,7 @@
 
 package ir;
 
-import java.util.List;
+import java.util.*;
 
 
 public class SpellChecker {
@@ -75,7 +75,7 @@ public class SpellChecker {
         //
         // YOUR CODE HERE
         //
-        return 0;
+        return (double) intersection / (szA + szB - intersection);
     }
 
     /**
@@ -89,8 +89,21 @@ public class SpellChecker {
         //
         // YOUR CODE HERE
         //
-
-        return -1;
+        // Compute Levenshtein distance
+        int[][] dp = new int[s1.length() + 1][s2.length() + 1];
+        for (int i = 0; i <= s1.length(); i++) {
+            for (int j = 0; j <= s2.length(); j++) {
+                if (i == 0) {
+                    dp[i][j] = j;
+                } else if (j == 0) {
+                    dp[i][j] = i;
+                } else {
+                    dp[i][j] = Math.min(dp[i - 1][j - 1] + (s1.charAt(i - 1) == s2.charAt(j - 1) ? 0 : 2),
+                            Math.min(dp[i - 1][j] + 1, dp[i][j - 1] + 1));
+                }
+            }
+        }
+        return dp[s1.length()][s2.length()];
     }
 
     /**
@@ -101,8 +114,90 @@ public class SpellChecker {
         //
         // YOUR CODE HERE
         //
+        int numTerms = query.queryterm.size();
+        if (numTerms == 0) return new String[0];
 
-        return null;
+        List<List<KGramStat>> qCorrections = new ArrayList<>();
+        String term;
+        ArrayList<KGramStat> list;
+        for (int i = 0; i < numTerms; i++) {
+            term = query.queryterm.get(i).term;
+            list = new ArrayList<>();
+            if (index.getPostings(term) == null) {
+                list = getRankedCorrections(term);
+            } else {
+                list.add(new KGramStat(term, 1));
+            }
+            qCorrections.add(list);
+        }
+
+        List<KGramStat> merged = mergeCorrections(qCorrections, limit);
+        String[] result = new String[Math.min(limit, merged.size())];
+        for (int i = 0; i < result.length; i++) {
+            result[i] = merged.get(i).getToken();
+        }
+        return result;
+    }
+
+    /**
+     * Computing ranked spelling corrections for <code>query</code> based on the
+     * Jaccard coefficient and edit distance. Returns up to <code>limit</code>
+     * ranked suggestions.
+     */
+    private ArrayList<KGramStat> getRankedCorrections(String term) {
+        HashSet<String> kgrams = new HashSet<>();
+        String termRegexp = "^" + term + "$";
+        for (int i = 0; i <= termRegexp.length() - kgIndex.getK(); i++) {
+            kgrams.add(termRegexp.substring(i, i + kgIndex.getK()));
+        }
+
+        // Find words containing kgrams
+        HashSet<String> wordSet = new HashSet<>();
+        for (String gram : kgrams) {
+            for (KGramPostingsEntry entry : kgIndex.getPostings(gram)) {
+                wordSet.add(kgIndex.id2term.get(entry.tokenID));
+            }
+        }
+
+        // Compute Jaccard coefficient
+        HashMap<String, Double> jaccardScores = new HashMap<>();
+        int szA = kgrams.size();
+        int szB;
+        int intersection;
+        for (String word : wordSet) {
+            szB = 0;
+            intersection = 0;
+            String token = "^" + word + "$";
+            for (int i = 0; i <= token.length() - kgIndex.getK(); i++) {
+                String gram = token.substring(i, i + kgIndex.getK());
+                if (kgrams.contains(gram)) {
+                    intersection++;
+                }
+                szB++;
+            }
+            double jaccard = jaccard(szA, szB, intersection);
+
+            if (jaccard >= JACCARD_THRESHOLD) {
+                jaccardScores.put(word, jaccard);
+            }
+        }
+
+        ArrayList<KGramStat> result = new ArrayList<>();
+        PostingsList postings;
+        int distance;
+        for (String word : jaccardScores.keySet()) {
+            distance = editDistance(term, word);
+            if (distance <= MAX_EDIT_DISTANCE) {
+                postings = index.getPostings(word);
+                if (postings == null) {
+                    result.add(new KGramStat(word, (double) distance / jaccardScores.get(word)));
+                } else {
+                    result.add(new KGramStat(word, (double) distance / (postings.size() * jaccardScores.get(word))));
+                }
+            }
+        }
+        Collections.sort(result);
+        return result;
     }
 
     /**
@@ -114,6 +209,35 @@ public class SpellChecker {
         //
         // YOUR CODE HERE
         //
-        return null;
+        if (qCorrections.isEmpty()) return new ArrayList<>();
+
+        List<KGramStat> result = qCorrections.getFirst();
+        for (int i = 1; i < qCorrections.size(); i++) {
+            List<KGramStat> current = qCorrections.get(i);
+            List<KGramStat> merged = new ArrayList<>();
+            for (KGramStat kgs : result) {
+                for (KGramStat kgs2 : current) {
+                    if (kgs.getToken().equals(kgs2.getToken())) {
+                        kgs.score += kgs2.score;
+                    }
+                }
+                merged.add(kgs);
+            }
+            for (KGramStat kgs : current) {
+                boolean found = false;
+                for (KGramStat kgs2 : result) {
+                    if (kgs.getToken().equals(kgs2.getToken())) {
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found) {
+                    merged.add(kgs);
+                }
+            }
+            Collections.sort(merged);
+            result = merged.subList(0, Math.min(limit, merged.size()));
+        }
+        return result;
     }
 }

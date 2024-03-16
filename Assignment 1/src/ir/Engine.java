@@ -47,7 +47,7 @@ public class Engine {
      */
     SpellChecker speller;
     // Assignment 3: Comment the line above and uncomment the next line
-    // SpellChecker = new SpellChecker( index, kgIndex );
+    // SpellChecker speller = new SpellChecker(index, kgIndex);
 
     /**
      * The engine GUI.
@@ -100,6 +100,7 @@ public class Engine {
         }
         indexer = new Indexer(index, kgIndex, patterns_file);
         searcher = new Searcher(index, kgIndex);
+        speller = new SpellChecker(index, kgIndex);
         gui = new SearchGUI(this);
         gui.init();
         /*
