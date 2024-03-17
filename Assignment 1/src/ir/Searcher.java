@@ -297,9 +297,6 @@ public class Searcher {
             }
         }
         result.sort();
-        for (int i = 0; i < result.size(); i++) {
-            System.out.println(i + " " + index.docNames.get(result.get(i).docID) + " " + result.get(i).score);
-        }
         return result;
     }
 
