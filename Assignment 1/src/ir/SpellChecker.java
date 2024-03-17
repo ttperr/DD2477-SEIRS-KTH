@@ -210,34 +210,20 @@ public class SpellChecker {
         // YOUR CODE HERE
         //
         if (qCorrections.isEmpty()) return new ArrayList<>();
-
-        List<KGramStat> result = qCorrections.getFirst();
+        List<KGramStat> list = qCorrections.getFirst();
+        List<KGramStat> phrases = new ArrayList<>(list);
         for (int i = 1; i < qCorrections.size(); i++) {
-            List<KGramStat> current = qCorrections.get(i);
-            List<KGramStat> merged = new ArrayList<>();
-            for (KGramStat kgs : result) {
-                for (KGramStat kgs2 : current) {
-                    if (kgs.getToken().equals(kgs2.getToken())) {
-                        kgs.score += kgs2.score;
-                    }
-                }
-                merged.add(kgs);
-            }
-            for (KGramStat kgs : current) {
-                boolean found = false;
-                for (KGramStat kgs2 : result) {
-                    if (kgs.getToken().equals(kgs2.getToken())) {
-                        found = true;
-                        break;
-                    }
-                }
-                if (!found) {
-                    merged.add(kgs);
+            list = qCorrections.get(i);
+            List<KGramStat> newPhrases = new ArrayList<>();
+            for (KGramStat phrase : phrases) {
+                for (KGramStat stat : list) {
+                    newPhrases.add(new KGramStat(phrase.getToken() + " " + stat.getToken(), phrase.score * stat.score));
                 }
             }
-            Collections.sort(merged);
-            result = merged.subList(0, Math.min(limit, merged.size()));
+            Collections.sort(newPhrases);
+            phrases = newPhrases.subList(0, Math.min(limit, newPhrases.size()));
         }
-        return result;
+
+        return phrases;
     }
 }
