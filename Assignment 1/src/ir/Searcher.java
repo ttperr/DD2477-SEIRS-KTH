@@ -246,6 +246,9 @@ public class Searcher {
         PostingsList result = new PostingsList();
         int i = 0;
         int j = 0;
+        if (p1 == null || p2 == null) {
+            return result;
+        }
         while (i < p1.size() && j < p2.size()) {
             if (p1.get(i).docID == p2.get(j).docID) {
                 ArrayList<Integer> p1Offsets = p1.get(i).offsets;
